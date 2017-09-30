@@ -15,6 +15,8 @@ import java.awt.event.ItemListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 
 class GameWindow extends JFrame {
 
@@ -41,6 +43,41 @@ class GameWindow extends JFrame {
             });
             fileMenu.add(openDirectoryItem);
         }
+        JMenuItem defaultWorldItem = new JMenuItem("Set default world", loadIcon("world.png"));
+        defaultWorldItem.addActionListener(new ActionListener() {
+
+            @Override
+            public void actionPerformed(ActionEvent actionEvent) {
+                String input = JOptionPane.showInputDialog(GameWindow.this,
+                        "Please enter a world number.",
+                        "Enter World",
+                        JOptionPane.INFORMATION_MESSAGE);
+                if (input != null && !input.isEmpty()) {
+                    int world;
+                    try {
+                        world = Integer.parseInt(input);
+                    } catch (NumberFormatException expected) {
+                        JOptionPane.showMessageDialog(GameWindow.this,
+                                "Please enter an integer.",
+                                "Input Error",
+                                JOptionPane.INFORMATION_MESSAGE);
+                        return;
+                    }
+                    try {
+                        InetAddress.getByName("oldschool" + world + ".runescape.com");
+                    } catch (UnknownHostException e) {
+                        e.printStackTrace();
+                        JOptionPane.showMessageDialog(GameWindow.this,
+                                "This world is unreachable or does not exist.",
+                                "World Error",
+                                JOptionPane.INFORMATION_MESSAGE);
+                        return;
+                    }
+                    Application.properties.setProperty("defaultWorld", input);
+                }
+            }
+        });
+        fileMenu.add(defaultWorldItem);
         final JCheckBoxMenuItem confirmCloseItem = new JCheckBoxMenuItem("Confirm on close",
                 loadIcon("confirm.png"),
                 Boolean.valueOf(Application.properties.getProperty("confirmClose")));
