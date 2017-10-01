@@ -15,6 +15,7 @@ public class Application {
     static final Properties properties;
     static {
         properties = new Properties();
+        properties.setProperty("screenshotFormat", "png");
         properties.setProperty("defaultWorld", "2");
         properties.setProperty("confirmClose", "false");
     }

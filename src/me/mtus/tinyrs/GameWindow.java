@@ -1,5 +1,6 @@
 package me.mtus.tinyrs;
 
+import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
 import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JFrame;
@@ -14,17 +15,22 @@ import javax.swing.SwingWorker;
 import java.applet.Applet;
 import java.applet.AppletContext;
 import java.applet.AppletStub;
+import java.awt.AWTException;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Desktop;
 import java.awt.Dimension;
 import java.awt.GridBagLayout;
+import java.awt.Point;
+import java.awt.Rectangle;
+import java.awt.Robot;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
@@ -35,11 +41,15 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.net.URLConnection;
 import java.net.UnknownHostException;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
 class GameWindow extends JFrame {
 
+    private final JPanel centerPanel = new JPanel(new GridBagLayout());
     private boolean started;
 
     GameWindow() {
@@ -64,42 +74,103 @@ class GameWindow extends JFrame {
                 }
             });
             fileMenu.add(openDirectoryItem);
-        }
-        JMenuItem defaultWorldItem = new JMenuItem("Set default world", loadIcon("world.png"));
-        defaultWorldItem.addActionListener(new ActionListener() {
+            final JMenuItem screenshotItem = new JMenuItem("Take screenshot", loadIcon("camera.png"));
+            screenshotItem.addActionListener(new ActionListener() {
 
-            @Override
-            public void actionPerformed(ActionEvent actionEvent) {
-                String input = JOptionPane.showInputDialog(GameWindow.this,
-                        "Please enter a world number.",
-                        "Enter World",
-                        JOptionPane.INFORMATION_MESSAGE);
-                if (input != null && !input.isEmpty()) {
-                    int world;
-                    try {
-                        world = Integer.parseInt(input);
-                    } catch (NumberFormatException expected) {
-                        JOptionPane.showMessageDialog(GameWindow.this,
-                                "Please enter an integer.",
-                                "Input Error",
-                                JOptionPane.INFORMATION_MESSAGE);
-                        return;
+                private final DateFormat dateFormat = new SimpleDateFormat("dd.MM.YYYY.HHmm.ss");
+                private final File screenshotDirectory = new File(storageDirectory, "Screenshots");
+                private Robot robot;
+
+                @Override
+                public void actionPerformed(ActionEvent actionEvent) {
+                    if (robot == null) {
+                        try {
+                            robot = new Robot();
+                        } catch (AWTException e) {
+                            screenshotItem.setEnabled(false);
+                            e.printStackTrace();
+                            JOptionPane.showMessageDialog(GameWindow.this,
+                                    "Could not initialize the facility for taking screenshots.",
+                                    "Screenshot Error",
+                                    JOptionPane.ERROR_MESSAGE);
+                            return;
+                        }
                     }
-                    try {
-                        InetAddress.getByName("oldschool" + world + ".runescape.com");
-                    } catch (UnknownHostException e) {
-                        e.printStackTrace();
-                        JOptionPane.showMessageDialog(GameWindow.this,
-                                "This world is unreachable or does not exist.",
-                                "World Error",
-                                JOptionPane.INFORMATION_MESSAGE);
-                        return;
+                    if (screenshotDirectory.exists() || (screenshotDirectory.mkdirs() && screenshotDirectory.canRead())) {
+                        final Point startPoint = centerPanel.getLocationOnScreen();
+                        final Rectangle canvasBounds = centerPanel.getBounds();
+                        new SwingWorker<Void, Void>() {
+
+                            @Override
+                            protected Void doInBackground() throws Exception {
+                                Thread.sleep(250);
+                                BufferedImage screenshot = robot.createScreenCapture(new Rectangle(
+                                        startPoint.x,
+                                        startPoint.y,
+                                        canvasBounds.width,
+                                        canvasBounds.height));
+                                String screenshotFormat = Application.properties.getProperty("screenshotFormat");
+                                if (!ImageIO.write(screenshot,
+                                        screenshotFormat,
+                                        new File(screenshotDirectory, "Screenshot-" + dateFormat.format(new Date()) + '.' + screenshotFormat))) {
+                                    Application.properties.setProperty("screenshotFormat", "png");
+                                }
+                                return null;
+                            }
+
+                            @Override
+                            protected void done() {
+                                try {
+                                    get();
+                                } catch (Exception e) {
+                                    e.printStackTrace();
+                                    JOptionPane.showMessageDialog(GameWindow.this,
+                                            "Could not take a screenshot.",
+                                            "Screenshot Error",
+                                            JOptionPane.WARNING_MESSAGE);
+                                }
+                            }
+                        }.execute();
                     }
-                    Application.properties.setProperty("defaultWorld", input);
                 }
-            }
-        });
-        fileMenu.add(defaultWorldItem);
+            });
+            fileMenu.add(screenshotItem);
+            JMenuItem defaultWorldItem = new JMenuItem("Set default world", loadIcon("world.png"));
+            defaultWorldItem.addActionListener(new ActionListener() {
+
+                @Override
+                public void actionPerformed(ActionEvent actionEvent) {
+                    String input = JOptionPane.showInputDialog(GameWindow.this,
+                            "Please enter a world number.",
+                            "Enter World",
+                            JOptionPane.INFORMATION_MESSAGE);
+                    if (input != null && !input.isEmpty()) {
+                        int world;
+                        try {
+                            world = Integer.parseInt(input);
+                        } catch (NumberFormatException expected) {
+                            JOptionPane.showMessageDialog(GameWindow.this,
+                                    "Please enter an integer.",
+                                    "Input Error",
+                                    JOptionPane.INFORMATION_MESSAGE);
+                            return;
+                        }
+                        try {
+                            InetAddress.getByName("oldschool" + world + ".runescape.com");
+                        } catch (UnknownHostException e) {
+                            e.printStackTrace();
+                            JOptionPane.showMessageDialog(GameWindow.this,
+                                    "This world is unreachable or does not exist.",
+                                    "World Error",
+                                    JOptionPane.INFORMATION_MESSAGE);
+                            return;
+                        }
+                        Application.properties.setProperty("defaultWorld", input);
+                    }
+                }
+            });
+            fileMenu.add(defaultWorldItem);
+        }
         final JCheckBoxMenuItem confirmCloseItem = new JCheckBoxMenuItem("Confirm on close",
                 loadIcon("confirm.png"),
                 Boolean.valueOf(Application.properties.getProperty("confirmClose")));
@@ -122,10 +193,11 @@ class GameWindow extends JFrame {
         fileMenu.add(defaultSizeItem);
         menuBar.add(fileMenu);
         setJMenuBar(menuBar);
-        getContentPane().setBackground(Color.BLACK);
         setSize(700, 500);
         setPreferredSize(new Dimension(700, 500));
         setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
+        centerPanel.setBackground(Color.BLACK);
+        add(centerPanel);
         addWindowListener(new WindowAdapter() {
 
             @Override
@@ -154,13 +226,10 @@ class GameWindow extends JFrame {
     private void loadGame(String storageDirectory) {
         started = true;
         if (storageDirectory == null) {
-            JPanel progressPanel = new JPanel(new GridBagLayout());
             JLabel loadingLabel = new JLabel("Loading...");
             loadingLabel.setForeground(Color.WHITE);
-            progressPanel.setBackground(Color.BLACK);
-            progressPanel.add(loadingLabel);
-            add(progressPanel);
-            validate();
+            centerPanel.add(loadingLabel);
+            centerPanel.validate();
             startGameClient(defaultGamepackAddress());
         } else {
             File gamepackFile = new File(storageDirectory, "gamepack.jar");
@@ -171,21 +240,16 @@ class GameWindow extends JFrame {
                     throw new Error(impossible);
                 }
             } else {
-                JPanel progressPanel = new JPanel(new GridBagLayout());
                 JProgressBar progressBar = new JProgressBar();
                 progressBar.setStringPainted(true);
-                progressPanel.setBackground(Color.BLACK);
-                progressPanel.add(progressBar);
-                add(progressPanel);
-                validate();
+                centerPanel.add(progressBar);
+                centerPanel.validate();
                 new GamepackDownloadWorker(gamepackFile, progressBar).execute();
             }
         }
     }
 
     private void startGameClient(URL gamepackAddress) {
-        getContentPane().removeAll();
-        getContentPane().validate();
         final ClassLoader classLoader = new URLClassLoader(new URL[] { gamepackAddress });
         new SwingWorker<Applet, Void>() {
 
@@ -246,11 +310,11 @@ class GameWindow extends JFrame {
                             JOptionPane.ERROR_MESSAGE);
                     return;
                 }
-                JPanel gamePanel = new JPanel(new BorderLayout());
-                gamePanel.setPreferredSize(new Dimension(765, 503));
-                gamePanel.add(gameApplet);
-                add(gamePanel);
-                validate();
+                centerPanel.removeAll();
+                centerPanel.setLayout(new BorderLayout());
+                centerPanel.setPreferredSize(new Dimension(765, 503));
+                centerPanel.add(gameApplet);
+                centerPanel.validate();
                 gameApplet.init();
                 gameApplet.start();
                 setPreferredSize(null);
