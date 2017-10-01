@@ -111,10 +111,20 @@ class GameWindow extends JFrame {
             }
         });
         fileMenu.add(confirmCloseItem);
+        JMenuItem defaultSizeItem = new JMenuItem("Set default size", loadIcon("resize.png"));
+        defaultSizeItem.addActionListener(new ActionListener() {
+
+            @Override
+            public void actionPerformed(ActionEvent actionEvent) {
+                pack();
+            }
+        });
+        fileMenu.add(defaultSizeItem);
         menuBar.add(fileMenu);
         setJMenuBar(menuBar);
         getContentPane().setBackground(Color.BLACK);
         setSize(700, 500);
+        setPreferredSize(new Dimension(700, 500));
         setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
         addWindowListener(new WindowAdapter() {
 
@@ -243,6 +253,7 @@ class GameWindow extends JFrame {
                 validate();
                 gameApplet.init();
                 gameApplet.start();
+                setPreferredSize(null);
                 pack();
             }
         }.execute();
