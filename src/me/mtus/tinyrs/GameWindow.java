@@ -57,23 +57,25 @@ class GameWindow extends JFrame {
         JMenu fileMenu = new JMenu("File");
         final String storageDirectory = Application.properties.getProperty("storageDirectory");
         if (storageDirectory != null) {
-            JMenuItem openDirectoryItem = new JMenuItem("Open storage directory", loadIcon("folder.png"));
-            openDirectoryItem.addActionListener(new ActionListener() {
+            if (Desktop.isDesktopSupported()) {
+                JMenuItem openDirectoryItem = new JMenuItem("Open storage directory", loadIcon("folder.png"));
+                openDirectoryItem.addActionListener(new ActionListener() {
 
-                @Override
-                public void actionPerformed(ActionEvent actionEvent) {
-                    try {
-                        Desktop.getDesktop().open(new File(storageDirectory));
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                        JOptionPane.showMessageDialog(GameWindow.this,
-                                "Could not open the storage directory.",
-                                "Directory Error",
-                                JOptionPane.WARNING_MESSAGE);
+                    @Override
+                    public void actionPerformed(ActionEvent actionEvent) {
+                        try {
+                            Desktop.getDesktop().open(new File(storageDirectory));
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                            JOptionPane.showMessageDialog(GameWindow.this,
+                                    "Could not open the storage directory.",
+                                    "Directory Error",
+                                    JOptionPane.WARNING_MESSAGE);
+                        }
                     }
-                }
-            });
-            fileMenu.add(openDirectoryItem);
+                });
+                fileMenu.add(openDirectoryItem);
+            }
             final JMenuItem screenshotItem = new JMenuItem("Take screenshot", loadIcon("camera.png"));
             screenshotItem.addActionListener(new ActionListener() {
 
