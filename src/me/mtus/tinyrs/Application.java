@@ -1,12 +1,12 @@
 package me.mtus.tinyrs;
 
 import javax.swing.JOptionPane;
+import javax.swing.JPopupMenu;
 import java.awt.EventQueue;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
 import java.net.InetAddress;
 import java.util.Properties;
 
@@ -86,6 +86,7 @@ public class Application {
 
             @Override
             public void run() {
+                JPopupMenu.setDefaultLightWeightPopupEnabled(false);
                 GameWindow window = new GameWindow();
                 window.setTitle("tinyrs");
                 window.setVisible(true);
@@ -94,13 +95,14 @@ public class Application {
     }
 
     static void saveProperties() {
-        String storageDirectory = properties.getProperty("storageDirectory");
+        String storageDirectory = (String) properties.remove("storageDirectory");
         if (storageDirectory != null) {
             try {
                 properties.store(new FileOutputStream(new File(storageDirectory, "tinyrs.properties")), null);
             } catch (IOException e) {
                 e.printStackTrace();
             }
+            properties.setProperty("storageDirectory", storageDirectory);
         }
     }
 
@@ -113,8 +115,8 @@ public class Application {
                     JOptionPane.showMessageDialog(null, message, title, type);
                 }
             });
-        } catch (InterruptedException e) {
+        } catch (Exception e) {
             e.printStackTrace();
-        } catch (InvocationTargetException impossible) {}
+        }
     }
 }
