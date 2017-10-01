@@ -65,6 +65,7 @@ final class GameHelpers {
                         }
                     }
                 }
+                return false;
             }
         }
         Socket socket = new Socket();
