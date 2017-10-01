@@ -14,8 +14,10 @@ import javax.swing.SwingWorker;
 import java.applet.Applet;
 import java.applet.AppletContext;
 import java.applet.AppletStub;
+import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Desktop;
+import java.awt.Dimension;
 import java.awt.GridBagLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -112,7 +114,7 @@ class GameWindow extends JFrame {
         menuBar.add(fileMenu);
         setJMenuBar(menuBar);
         getContentPane().setBackground(Color.BLACK);
-        setSize(800, 600);
+        setSize(700, 500);
         setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
         addWindowListener(new WindowAdapter() {
 
@@ -173,7 +175,7 @@ class GameWindow extends JFrame {
 
     private void startGameClient(URL gamepackAddress) {
         getContentPane().removeAll();
-        validate();
+        getContentPane().validate();
         final ClassLoader classLoader = new URLClassLoader(new URL[] { gamepackAddress });
         new SwingWorker<Applet, Void>() {
 
@@ -234,10 +236,14 @@ class GameWindow extends JFrame {
                             JOptionPane.ERROR_MESSAGE);
                     return;
                 }
-                add(gameApplet);
+                JPanel gamePanel = new JPanel(new BorderLayout());
+                gamePanel.setPreferredSize(new Dimension(765, 503));
+                gamePanel.add(gameApplet);
+                add(gamePanel);
+                validate();
                 gameApplet.init();
                 gameApplet.start();
-                validate();
+                pack();
             }
         }.execute();
     }
