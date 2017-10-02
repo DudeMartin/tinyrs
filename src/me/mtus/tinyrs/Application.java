@@ -21,17 +21,16 @@ public class Application {
     }
 
     public static void main(String[] arguments) {
+        String worldNumber = null;
         File storageDirectory = null;
         for (String argument : arguments) {
             if (argument.startsWith("defaultWorld=")) {
-                String worldNumber = argument.substring(13);
+                worldNumber = argument.substring(13);
                 try {
                     InetAddress.getByName("oldschool" + Integer.parseInt(worldNumber) + ".runescape.com");
                 } catch (Exception e) {
                     e.printStackTrace();
-                    continue;
                 }
-                properties.setProperty("defaultWorld", worldNumber);
             } else if (argument.startsWith("storageDirectory=")) {
                 File specifiedDirectory = new File(argument.substring(17));
                 if (!specifiedDirectory.exists()) {
@@ -82,6 +81,7 @@ public class Application {
                         JOptionPane.WARNING_MESSAGE);
             }
         }
+        if (worldNumber != null) properties.setProperty("defaultWorld", worldNumber);
         if (storageDirectory != null) properties.setProperty("storageDirectory", storageDirectory.getAbsolutePath());
         EventQueue.invokeLater(new Runnable() {
 
