@@ -326,7 +326,12 @@ class GameWindow extends JFrame {
     }
 
     private static ImageIcon loadIcon(String name) {
-        return new ImageIcon(GameWindow.class.getResource("/resources/" + name));
+        try {
+            return new ImageIcon(GameWindow.class.getResource("/resources/" + name));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 
     private static URL defaultGamepackAddress() {

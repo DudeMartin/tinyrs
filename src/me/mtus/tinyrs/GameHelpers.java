@@ -35,38 +35,45 @@ final class GameHelpers {
             return false;
         }
         int revision = -1;
-        outer: for (Enumeration<JarEntry> jarEntries = gamepack.entries(); jarEntries.hasMoreElements(); ) {
-            JarEntry entry = jarEntries.nextElement();
-            if (entry.getName().equals("client.class")) {
-                ClassFile clientClass;
-                try {
-                    clientClass = new ClassFile(readStream(gamepack.getInputStream(entry)));
-                } catch (IOException e) {
-                    e.printStackTrace();
-                    return false;
-                }
-                for (MethodMember method : clientClass.methods) {
-                    List<Instruction> instructions = method.instructions;
-                    for (int i = 0, end = instructions.size() - 2; i < end; i++) {
-                        Instruction firstInstruction = instructions.get(i);
-                        Instruction secondInstruction = instructions.get(i + 1);
-                        if (firstInstruction.getOpcode() == Instruction.SIPUSH
-                                && secondInstruction.getOpcode() == Instruction.SIPUSH) {
-                            PushInstruction firstPush = (PushInstruction) firstInstruction;
-                            PushInstruction secondPush = (PushInstruction) secondInstruction;
-                            if (firstPush.value == 765 && secondPush.value == 503) {
-                                Instruction nextInstruction = instructions.get(i + 2);
-                                if (nextInstruction instanceof PushInstruction) {
-                                    PushInstruction revisionInstruction = (PushInstruction) nextInstruction;
-                                    revision = revisionInstruction.value;
-                                    break outer;
+        try {
+            archiveLoop:
+            for (Enumeration<JarEntry> jarEntries = gamepack.entries(); jarEntries.hasMoreElements(); ) {
+                JarEntry entry = jarEntries.nextElement();
+                if (entry.getName().equals("client.class")) {
+                    ClassFile clientClass;
+                    try {
+                        clientClass = new ClassFile(readStream(gamepack.getInputStream(entry)));
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                        return false;
+                    }
+                    for (MethodMember method : clientClass.methods) {
+                        List<Instruction> instructions = method.instructions;
+                        for (int i = 0, end = instructions.size() - 2; i < end; i++) {
+                            Instruction firstInstruction = instructions.get(i);
+                            Instruction secondInstruction = instructions.get(i + 1);
+                            if (firstInstruction.getOpcode() == Instruction.SIPUSH
+                                    && secondInstruction.getOpcode() == Instruction.SIPUSH) {
+                                PushInstruction firstPush = (PushInstruction) firstInstruction;
+                                PushInstruction secondPush = (PushInstruction) secondInstruction;
+                                if (firstPush.value == 765 && secondPush.value == 503) {
+                                    Instruction nextInstruction = instructions.get(i + 2);
+                                    if (nextInstruction instanceof PushInstruction) {
+                                        PushInstruction revisionInstruction = (PushInstruction) nextInstruction;
+                                        revision = revisionInstruction.value;
+                                        break archiveLoop;
+                                    }
                                 }
                             }
                         }
                     }
+                    return false;
                 }
-                return false;
             }
+        } finally {
+            try {
+                gamepack.close();
+            } catch (IOException ignored) {}
         }
         Socket socket = new Socket();
         try {
