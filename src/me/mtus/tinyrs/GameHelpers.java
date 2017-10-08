@@ -13,6 +13,7 @@ import java.io.InputStream;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.net.UnknownHostException;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
@@ -25,6 +26,18 @@ import java.util.regex.Pattern;
 final class GameHelpers {
 
     private static final Pattern PARAMETER_PATTERN = Pattern.compile("<param name=\"(.*?)\" value=\"(.*?)\">");
+
+    static boolean isValidWorld(String number) {
+        if (number.isEmpty()) {
+            return false;
+        }
+        try {
+            InetAddress.getByName("oldschool" + number + ".runescape.com");
+            return true;
+        } catch (UnknownHostException expected) {
+            return false;
+        }
+    }
 
     static boolean isLatestRevision(File gamepackFile) {
         JarFile gamepack;

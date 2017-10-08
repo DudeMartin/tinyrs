@@ -7,7 +7,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.net.InetAddress;
 import java.util.Properties;
 
 public class Application {
@@ -16,20 +15,19 @@ public class Application {
     static {
         properties = new Properties();
         properties.setProperty("screenshotFormat", "png");
-        properties.setProperty("defaultWorld", "2");
         properties.setProperty("confirmClose", "false");
+        setDefaultWorldToTwo();
     }
 
     public static void main(String[] arguments) {
-        String worldNumber = null;
+        String defaultWorld = null;
         File storageDirectory = null;
         for (String argument : arguments) {
             if (argument.startsWith("defaultWorld=")) {
-                worldNumber = argument.substring(13);
-                try {
-                    InetAddress.getByName("oldschool" + Integer.parseInt(worldNumber) + ".runescape.com");
-                } catch (Exception e) {
-                    e.printStackTrace();
+                defaultWorld = argument.substring(13);
+                if (!GameHelpers.isValidWorld(defaultWorld)) {
+                    System.err.println("Invalid game world specified. Ignoring argument...");
+                    defaultWorld = null;
                 }
             } else if (argument.startsWith("storageDirectory=")) {
                 File specifiedDirectory = new File(argument.substring(17));
@@ -58,6 +56,7 @@ public class Application {
                 storageDirectory = specifiedDirectory;
             }
         }
+        boolean loadedProperties = false;
         if (storageDirectory == null) {
             storageDirectory = new File(System.getProperty("user.home"), "tinyrs");
             if ((storageDirectory.exists() || storageDirectory.mkdirs())
@@ -67,6 +66,7 @@ public class Application {
                 if (propertiesFile.exists()) {
                     try {
                         properties.load(new FileInputStream(propertiesFile));
+                        loadedProperties = true;
                     } catch (IOException e) {
                         e.printStackTrace();
                         showMessage("Could not load the existing properties file.",
@@ -81,8 +81,15 @@ public class Application {
                         JOptionPane.WARNING_MESSAGE);
             }
         }
-        if (worldNumber != null) properties.setProperty("defaultWorld", worldNumber);
-        if (storageDirectory != null) properties.setProperty("storageDirectory", storageDirectory.getAbsolutePath());
+        if (defaultWorld != null) {
+            properties.setProperty("defaultWorld", defaultWorld);
+        } else if (loadedProperties && !GameHelpers.isValidWorld(properties.getProperty("defaultWorld"))) {
+            setDefaultWorldToTwo();
+            System.err.println("Invalid game world specified in the properties file. Defaulting to " + properties.getProperty("defaultWorld") + "...");
+        }
+        if (storageDirectory != null) {
+            properties.setProperty("storageDirectory", storageDirectory.getAbsolutePath());
+        }
         EventQueue.invokeLater(new Runnable() {
 
             @Override
@@ -102,9 +109,14 @@ public class Application {
                 properties.store(new FileOutputStream(new File(storageDirectory, "tinyrs.properties")), null);
             } catch (IOException e) {
                 e.printStackTrace();
+            } finally {
+                properties.setProperty("storageDirectory", storageDirectory);
             }
-            properties.setProperty("storageDirectory", storageDirectory);
         }
+    }
+
+    private static void setDefaultWorldToTwo() {
+        properties.setProperty("defaultWorld", "2");
     }
 
     private static void showMessage(final String message, final String title, final int type) {

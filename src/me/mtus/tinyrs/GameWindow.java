@@ -35,12 +35,10 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.net.InetAddress;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.net.URLConnection;
-import java.net.UnknownHostException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -90,6 +88,7 @@ class GameWindow extends JFrame {
                             robot = new Robot();
                         } catch (AWTException e) {
                             screenshotItem.setEnabled(false);
+                            screenshotItem.removeActionListener(this);
                             e.printStackTrace();
                             JOptionPane.showMessageDialog(GameWindow.this,
                                     "Could not initialize the facility for taking screenshots.",
@@ -147,20 +146,16 @@ class GameWindow extends JFrame {
                             "Enter World",
                             JOptionPane.INFORMATION_MESSAGE);
                     if (input != null && !input.isEmpty()) {
-                        int world;
                         try {
-                            world = Integer.parseInt(input);
+                            Integer.parseInt(input);
                         } catch (NumberFormatException expected) {
                             JOptionPane.showMessageDialog(GameWindow.this,
-                                    "Please enter an integer.",
+                                    "Please enter a positive integer.",
                                     "Input Error",
                                     JOptionPane.INFORMATION_MESSAGE);
                             return;
                         }
-                        try {
-                            InetAddress.getByName("oldschool" + world + ".runescape.com");
-                        } catch (UnknownHostException e) {
-                            e.printStackTrace();
+                        if (!GameHelpers.isValidWorld(input)) {
                             JOptionPane.showMessageDialog(GameWindow.this,
                                     "This world is unreachable or does not exist.",
                                     "World Error",
@@ -211,13 +206,16 @@ class GameWindow extends JFrame {
 
             @Override
             public void windowClosing(WindowEvent windowEvent) {
-                if (Boolean.valueOf(Application.properties.getProperty("confirmClose", "false")) == Boolean.TRUE &&
-                        JOptionPane.showOptionDialog(GameWindow.this,
-                                "Are you sure you want to close?",
-                                "Confirm Close",
-                                JOptionPane.YES_NO_OPTION,
-                                JOptionPane.QUESTION_MESSAGE, null, null, null) != JOptionPane.YES_OPTION) {
-                    return;
+                boolean confirmClose = Application.properties.getProperty("confirmClose", "false").equalsIgnoreCase("true");
+                if (confirmClose) {
+                    int userDecision = JOptionPane.showOptionDialog(GameWindow.this,
+                            "Are you sure you want to close?",
+                            "Confirm Close",
+                            JOptionPane.YES_NO_OPTION,
+                            JOptionPane.QUESTION_MESSAGE, null, null, null);
+                    if (userDecision != JOptionPane.YES_OPTION) {
+                        return;
+                    }
                 }
                 Application.saveProperties();
                 System.exit(0);
