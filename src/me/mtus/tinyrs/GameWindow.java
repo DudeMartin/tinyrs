@@ -155,14 +155,14 @@ class GameWindow extends JFrame {
                                     JOptionPane.INFORMATION_MESSAGE);
                             return;
                         }
-                        if (!GameHelpers.isValidWorld(input)) {
+                        if (GameHelpers.isValidWorld(input)) {
+                            Application.properties.setProperty("defaultWorld", input);
+                        } else {
                             JOptionPane.showMessageDialog(GameWindow.this,
                                     "This world is unreachable or does not exist.",
                                     "World Error",
                                     JOptionPane.INFORMATION_MESSAGE);
-                            return;
                         }
-                        Application.properties.setProperty("defaultWorld", input);
                     }
                 }
             });
