@@ -8,6 +8,9 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Properties;
+import java.util.concurrent.Callable;
+import java.util.concurrent.FutureTask;
+import java.util.concurrent.RunnableFuture;
 
 public class Application {
 
@@ -32,20 +35,31 @@ public class Application {
             } else if (argument.startsWith("storageDirectory=")) {
                 File specifiedDirectory = new File(argument.substring(17));
                 if (!specifiedDirectory.exists()) {
-                    int userDecision = JOptionPane.showOptionDialog(null,
-                            "The storage directory you specified does not exist. Do you want to create it?",
-                            "Directory Missing",
-                            JOptionPane.YES_NO_OPTION,
-                            JOptionPane.QUESTION_MESSAGE,
-                            null, null, null);
-                    if (userDecision == JOptionPane.YES_OPTION) {
-                        if (!specifiedDirectory.mkdirs()) {
-                            showMessage("Could not create the specified directory.",
-                                    "Directory Error",
-                                    JOptionPane.WARNING_MESSAGE);
+                    try {
+                        RunnableFuture<Integer> promptTask = new FutureTask<Integer>(new Callable<Integer>() {
+
+                            @Override
+                            public Integer call() throws Exception {
+                                return JOptionPane.showOptionDialog(null,
+                                        "The storage directory you specified does not exist. Do you want to create it?",
+                                        "Directory Missing",
+                                        JOptionPane.YES_NO_OPTION,
+                                        JOptionPane.QUESTION_MESSAGE,
+                                        null, null, null);
+                            }
+                        });
+                        EventQueue.invokeAndWait(promptTask);
+                        if (promptTask.get() != JOptionPane.YES_OPTION) {
                             continue;
                         }
-                    } else {
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        continue;
+                    }
+                    if (!specifiedDirectory.mkdirs()) {
+                        showMessage("Could not create the specified directory.",
+                                "Directory Error",
+                                JOptionPane.WARNING_MESSAGE);
                         continue;
                     }
                 }
