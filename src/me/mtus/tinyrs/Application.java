@@ -45,6 +45,8 @@ public class Application {
                                     JOptionPane.WARNING_MESSAGE);
                             continue;
                         }
+                    } else {
+                        continue;
                     }
                 }
                 if (!specifiedDirectory.canRead() || !specifiedDirectory.canWrite()) {
