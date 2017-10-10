@@ -98,18 +98,18 @@ class GameWindow extends JFrame {
                         }
                     }
                     if (screenshotDirectory.exists() || (screenshotDirectory.mkdirs() && screenshotDirectory.canRead())) {
-                        final Point startPoint = centerPanel.getLocationOnScreen();
-                        final Rectangle canvasBounds = centerPanel.getBounds();
+                        Point startPoint = centerPanel.getLocationOnScreen();
+                        final Rectangle visibleArea = centerPanel.getGraphicsConfiguration().getBounds().intersection(new Rectangle(
+                                        startPoint.x,
+                                        startPoint.y,
+                                        centerPanel.getWidth(),
+                                        centerPanel.getHeight()));
                         new SwingWorker<Void, Void>() {
 
                             @Override
                             protected Void doInBackground() throws Exception {
                                 Thread.sleep(250);
-                                BufferedImage screenshot = robot.createScreenCapture(new Rectangle(
-                                        startPoint.x,
-                                        startPoint.y,
-                                        canvasBounds.width,
-                                        canvasBounds.height));
+                                BufferedImage screenshot = robot.createScreenCapture(visibleArea);
                                 String screenshotFormat = Application.properties.getProperty("screenshotFormat");
                                 if (!ImageIO.write(screenshot,
                                         screenshotFormat,
