@@ -21,7 +21,6 @@ import java.awt.Color;
 import java.awt.Desktop;
 import java.awt.Dimension;
 import java.awt.GridBagLayout;
-import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.Robot;
 import java.awt.event.ActionEvent;
@@ -30,7 +29,6 @@ import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
@@ -98,20 +96,16 @@ class GameWindow extends JFrame {
                         }
                     }
                     if (screenshotDirectory.exists() || (screenshotDirectory.mkdirs() && screenshotDirectory.canRead())) {
-                        Point startPoint = centerPanel.getLocationOnScreen();
                         final Rectangle visibleArea = centerPanel.getGraphicsConfiguration().getBounds().intersection(new Rectangle(
-                                        startPoint.x,
-                                        startPoint.y,
-                                        centerPanel.getWidth(),
-                                        centerPanel.getHeight()));
+                                        centerPanel.getLocationOnScreen(),
+                                        new Dimension(centerPanel.getWidth(), centerPanel.getHeight())));
                         new SwingWorker<Void, Void>() {
 
                             @Override
                             protected Void doInBackground() throws Exception {
                                 Thread.sleep(250);
-                                BufferedImage screenshot = robot.createScreenCapture(visibleArea);
                                 String screenshotFormat = Application.properties.getProperty("screenshotFormat");
-                                if (!ImageIO.write(screenshot,
+                                if (!ImageIO.write(robot.createScreenCapture(visibleArea),
                                         screenshotFormat,
                                         new File(screenshotDirectory, "Screenshot-" + dateFormat.format(new Date()) + '.' + screenshotFormat))) {
                                     Application.properties.setProperty("screenshotFormat", "png");
@@ -190,8 +184,9 @@ class GameWindow extends JFrame {
         fileMenu.add(defaultSizeItem);
         menuBar.add(fileMenu);
         setJMenuBar(menuBar);
-        setSize(700, 500);
-        setPreferredSize(new Dimension(700, 500));
+        Dimension defaultSize = new Dimension(700, 500);
+        setSize(defaultSize);
+        setPreferredSize(defaultSize);
         setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
         centerPanel.setBackground(Color.BLACK);
         add(centerPanel);
