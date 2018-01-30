@@ -23,7 +23,7 @@ import java.util.Map;
 
 class GameWindow extends JFrame {
 
-    private final JPanel centerPanel = new JPanel(new GridBagLayout());
+    private final JPanel centerPanel = new CenterPanel();
     private boolean started;
 
     GameWindow() {
@@ -229,6 +229,7 @@ class GameWindow extends JFrame {
                 progressBar.setStringPainted(true);
                 centerPanel.add(progressBar);
                 centerPanel.validate();
+                centerPanel.repaint();
                 new GamepackDownloadWorker(gamepackFile, progressBar).execute();
             }
         }
@@ -322,6 +323,29 @@ class GameWindow extends JFrame {
             return new URL("http://oldschool" + Application.properties.getProperty("defaultWorld") + ".runescape.com/gamepack.jar");
         } catch (MalformedURLException impossible) {
             throw new Error(impossible);
+        }
+    }
+
+    private class CenterPanel extends JPanel {
+
+        private CenterPanel() {
+            super(new GridBagLayout());
+            setBackground(Color.BLACK);
+        }
+
+        @Override
+        public void paintComponent(Graphics g) {
+            super.paintComponent(g);
+            if (getComponentCount() > 0) {
+                Component component = getComponent(0);
+                if (component instanceof JProgressBar) {
+                    FontMetrics metrics = g.getFontMetrics();
+                    g.setColor(Color.WHITE);
+                    g.drawString("Downloading game...",
+                            component.getX() + component.getWidth() / 2 - metrics.stringWidth("Downloading game...") / 2,
+                            component.getY() - 15 + metrics.getHeight() / 2);
+                }
+            }
         }
     }
 
