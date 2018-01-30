@@ -1,8 +1,7 @@
 package me.mtus.tinyrs;
 
-import javax.swing.JOptionPane;
-import javax.swing.JPopupMenu;
-import java.awt.EventQueue;
+import javax.swing.*;
+import java.awt.*;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -19,6 +18,7 @@ public class Application {
         properties = new Properties();
         properties.setProperty("screenshotFormat", "png");
         properties.setProperty("confirmClose", "false");
+        properties.setProperty("alwaysOnTop", "false");
         setDefaultWorldToTwo();
     }
 

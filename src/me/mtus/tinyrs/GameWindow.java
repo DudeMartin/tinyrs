@@ -1,34 +1,12 @@
 package me.mtus.tinyrs;
 
 import javax.imageio.ImageIO;
-import javax.swing.ImageIcon;
-import javax.swing.JCheckBoxMenuItem;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JMenu;
-import javax.swing.JMenuBar;
-import javax.swing.JMenuItem;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JProgressBar;
-import javax.swing.SwingWorker;
+import javax.swing.*;
 import java.applet.Applet;
 import java.applet.AppletContext;
 import java.applet.AppletStub;
-import java.awt.AWTException;
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Desktop;
-import java.awt.Dimension;
-import java.awt.GridBagLayout;
-import java.awt.Rectangle;
-import java.awt.Robot;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.ItemEvent;
-import java.awt.event.ItemListener;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
+import java.awt.*;
+import java.awt.event.*;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
@@ -182,6 +160,18 @@ class GameWindow extends JFrame {
             }
         });
         fileMenu.add(defaultSizeItem);
+        final JCheckBoxMenuItem alwaysOnTopItem = new JCheckBoxMenuItem("Always on top",
+                loadIcon("top.png"),
+                Boolean.valueOf(Application.properties.getProperty("alwaysOnTop")));
+        alwaysOnTopItem.addItemListener(new ItemListener() {
+
+            @Override
+            public void itemStateChanged(ItemEvent itemEvent) {
+                Application.properties.setProperty("alwaysOnTop", Boolean.toString(alwaysOnTopItem.isSelected()));
+                setAlwaysOnTop(alwaysOnTopItem.isSelected());
+            }
+        });
+        fileMenu.add(alwaysOnTopItem);
         menuBar.add(fileMenu);
         setJMenuBar(menuBar);
         Dimension defaultSize = new Dimension(700, 500);
