@@ -1,4 +1,4 @@
-package me.mtus.tinyrs.utils;
+package tinyrs.utils;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -23,8 +23,7 @@ public final class AppletUtility {
         try {
             InetAddress.getByName(getHostForWorld(world));
             return true;
-        } catch (UnknownHostException e) {
-            e.printStackTrace();
+        } catch (UnknownHostException expected) {
             return false;
         }
     }

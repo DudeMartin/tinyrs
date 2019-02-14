@@ -1,4 +1,4 @@
-package me.mtus.tinyrs;
+package tinyrs;
 
 import java.applet.Applet;
 import java.applet.AppletContext;
@@ -48,9 +48,9 @@ import javax.swing.JPanel;
 import javax.swing.JProgressBar;
 import javax.swing.SwingWorker;
 
-import me.mtus.tinyrs.utils.AppletUtility;
-import me.mtus.tinyrs.utils.StreamUtility;
-import me.mtus.tinyrs.utils.VersionUtility;
+import tinyrs.utils.AppletUtility;
+import tinyrs.utils.StreamUtility;
+import tinyrs.utils.VersionUtility;
 
 class GameWindow extends JFrame {
 

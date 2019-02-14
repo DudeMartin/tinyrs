@@ -1,4 +1,4 @@
-package me.mtus.tinyrs.utils;
+package tinyrs.utils;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;

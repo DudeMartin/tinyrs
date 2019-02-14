@@ -1,4 +1,4 @@
-package me.mtus.tinyrs.utils;
+package tinyrs.utils;
 
 import java.io.ByteArrayInputStream;
 import java.io.DataInput;

@@ -1,4 +1,4 @@
-package me.mtus.tinyrs;
+package tinyrs;
 
 import java.awt.EventQueue;
 import java.io.File;
@@ -12,7 +12,7 @@ import java.util.concurrent.RunnableFuture;
 import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
 
-import me.mtus.tinyrs.utils.AppletUtility;
+import tinyrs.utils.AppletUtility;
 
 public class Application {
 
