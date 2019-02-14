@@ -1,6 +1,14 @@
 package me.mtus.tinyrs.utils;
 
+import java.io.ByteArrayInputStream;
+import java.io.DataInput;
+import java.io.DataInputStream;
+import java.io.DataOutput;
+import java.io.DataOutputStream;
 import java.io.IOException;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
+import java.net.Socket;
 import java.util.Enumeration;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
@@ -21,14 +29,28 @@ public final class VersionUtility {
                 continue;
             }
             byte[] classBytes = StreamUtility.readBytes(gamepack.getInputStream(entry));
-            int revisionPatternIndex = indexOf(classBytes, REVISION_NUMBER_PATTERN);
-            if (revisionPatternIndex == -1) {
+            int patternIndex = indexOf(classBytes, REVISION_NUMBER_PATTERN);
+            if (patternIndex == -1) {
                 return -1;
             }
-            int revisionOffset = revisionPatternIndex + REVISION_NUMBER_PATTERN.length;
-            return ((classBytes[revisionOffset] << 8) | classBytes[revisionOffset + 1]) & 0xff;
+            DataInput classDataInput = new DataInputStream(new ByteArrayInputStream(classBytes));
+            classDataInput.skipBytes(patternIndex + REVISION_NUMBER_PATTERN.length);
+            return classDataInput.readShort();
         }
         return -1;
+    }
+
+    public static boolean isLatestRevision(int revision) throws IOException {
+        Socket socket = new Socket();
+        try {
+            socket.connect(new InetSocketAddress(InetAddress.getByName("oldschool2.runescape.com"), 43594));
+            DataOutput socketStream = new DataOutputStream(socket.getOutputStream());
+            socketStream.write(15);
+            socketStream.writeInt(revision);
+            return socket.getInputStream().read() == 0;
+        } finally {
+            socket.close();
+        }
     }
 
     private static int indexOf(byte[] source, byte[] pattern) {

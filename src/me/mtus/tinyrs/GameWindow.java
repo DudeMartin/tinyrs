@@ -22,6 +22,7 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.MalformedURLException;
@@ -33,6 +34,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.jar.JarFile;
 import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
 import javax.swing.JCheckBoxMenuItem;
@@ -47,6 +49,7 @@ import javax.swing.JProgressBar;
 import javax.swing.SwingWorker;
 
 import me.mtus.tinyrs.utils.StreamUtility;
+import me.mtus.tinyrs.utils.VersionUtility;
 
 class GameWindow extends JFrame {
 
@@ -245,20 +248,29 @@ class GameWindow extends JFrame {
             startGameClient(defaultGamepackAddress());
         } else {
             File gamepackFile = new File(storageDirectory, "gamepack.jar");
-            if (gamepackFile.exists() && GameHelpers.isLatestRevision(gamepackFile)) {
+            if (gamepackFile.exists()) {
+                boolean latestRevision;
                 try {
-                    startGameClient(gamepackFile.toURI().toURL());
-                } catch (MalformedURLException impossible) {
-                    throw new Error(impossible);
+                    latestRevision = VersionUtility.isLatestRevision(VersionUtility.getRevision(new JarFile(gamepackFile)));
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    latestRevision = false;
                 }
-            } else {
-                JProgressBar progressBar = new JProgressBar();
-                progressBar.setStringPainted(true);
-                centerPanel.add(progressBar);
-                centerPanel.validate();
-                centerPanel.repaint();
-                new GamepackDownloadWorker(gamepackFile, progressBar).execute();
+                if (latestRevision) {
+                    try {
+                        startGameClient(gamepackFile.toURI().toURL());
+                    } catch (MalformedURLException impossible) {
+                        throw new Error(impossible);
+                    }
+                    return;
+                }
             }
+            JProgressBar progressBar = new JProgressBar();
+            progressBar.setStringPainted(true);
+            centerPanel.add(progressBar);
+            centerPanel.validate();
+            centerPanel.repaint();
+            new GamepackDownloadWorker(gamepackFile, progressBar).execute();
         }
     }
 
