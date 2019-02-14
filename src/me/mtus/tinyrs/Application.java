@@ -1,7 +1,6 @@
 package me.mtus.tinyrs;
 
-import javax.swing.*;
-import java.awt.*;
+import java.awt.EventQueue;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -10,6 +9,10 @@ import java.util.Properties;
 import java.util.concurrent.Callable;
 import java.util.concurrent.FutureTask;
 import java.util.concurrent.RunnableFuture;
+import javax.swing.JOptionPane;
+import javax.swing.JPopupMenu;
+
+import me.mtus.tinyrs.utils.AppletUtility;
 
 public class Application {
 
@@ -28,7 +31,7 @@ public class Application {
         for (String argument : arguments) {
             if (argument.startsWith("defaultWorld=")) {
                 defaultWorld = argument.substring(13);
-                if (!GameHelpers.isValidWorld(defaultWorld)) {
+                if (!AppletUtility.isValidWorld(Integer.parseInt(defaultWorld))) {
                     System.err.println("Invalid game world specified. Ignoring argument...");
                     defaultWorld = null;
                 }
@@ -99,7 +102,7 @@ public class Application {
         }
         if (defaultWorld != null) {
             properties.setProperty("defaultWorld", defaultWorld);
-        } else if (loadedProperties && !GameHelpers.isValidWorld(properties.getProperty("defaultWorld"))) {
+        } else if (loadedProperties && !AppletUtility.isValidWorld(Integer.parseInt(properties.getProperty("defaultWorld")))) {
             setDefaultWorldToTwo();
             System.err.println("Invalid game world specified in the properties file. Defaulting to " + properties.getProperty("defaultWorld") + "...");
         }

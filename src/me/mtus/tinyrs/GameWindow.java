@@ -48,6 +48,7 @@ import javax.swing.JPanel;
 import javax.swing.JProgressBar;
 import javax.swing.SwingWorker;
 
+import me.mtus.tinyrs.utils.AppletUtility;
 import me.mtus.tinyrs.utils.StreamUtility;
 import me.mtus.tinyrs.utils.VersionUtility;
 
@@ -148,8 +149,9 @@ class GameWindow extends JFrame {
                             "Enter World",
                             JOptionPane.INFORMATION_MESSAGE);
                     if (input != null && !input.isEmpty()) {
+                        int world;
                         try {
-                            Integer.parseInt(input);
+                            world = Integer.parseInt(input);
                         } catch (NumberFormatException expected) {
                             JOptionPane.showMessageDialog(GameWindow.this,
                                     "Please enter a positive integer.",
@@ -157,7 +159,7 @@ class GameWindow extends JFrame {
                                     JOptionPane.INFORMATION_MESSAGE);
                             return;
                         }
-                        if (GameHelpers.isValidWorld(input)) {
+                        if (AppletUtility.isValidWorld(world)) {
                             Application.properties.setProperty("defaultWorld", input);
                         } else {
                             JOptionPane.showMessageDialog(GameWindow.this,
@@ -286,7 +288,7 @@ class GameWindow extends JFrame {
                     private final URL pageAddress =
                             new URL("http://oldschool" + Application.properties.getProperty("defaultWorld") + ".runescape.com");
                     private final Map<String, String> parameters =
-                            GameHelpers.parseParameters(new String(StreamUtility.readBytes(pageAddress.openStream())));
+                            AppletUtility.parseParameters(new String(StreamUtility.readBytes(pageAddress.openStream())));
 
                     @Override
                     public boolean isActive() {
