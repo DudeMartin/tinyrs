@@ -1,12 +1,25 @@
 package me.mtus.tinyrs;
 
-import javax.imageio.ImageIO;
-import javax.swing.*;
 import java.applet.Applet;
 import java.applet.AppletContext;
 import java.applet.AppletStub;
-import java.awt.*;
-import java.awt.event.*;
+import java.awt.AWTException;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Desktop;
+import java.awt.Dimension;
+import java.awt.FontMetrics;
+import java.awt.Graphics;
+import java.awt.GridBagLayout;
+import java.awt.Rectangle;
+import java.awt.Robot;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
@@ -20,6 +33,20 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import javax.imageio.ImageIO;
+import javax.swing.ImageIcon;
+import javax.swing.JCheckBoxMenuItem;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JProgressBar;
+import javax.swing.SwingWorker;
+
+import me.mtus.tinyrs.utils.StreamUtility;
 
 class GameWindow extends JFrame {
 
@@ -247,7 +274,7 @@ class GameWindow extends JFrame {
                     private final URL pageAddress =
                             new URL("http://oldschool" + Application.properties.getProperty("defaultWorld") + ".runescape.com");
                     private final Map<String, String> parameters =
-                            GameHelpers.parseParameters(new String(GameHelpers.readStream(pageAddress.openStream())));
+                            GameHelpers.parseParameters(new String(StreamUtility.readBytes(pageAddress.openStream())));
 
                     @Override
                     public boolean isActive() {
@@ -368,7 +395,7 @@ class GameWindow extends JFrame {
             try {
                 if (fileSize == -1) {
                     publish(-1);
-                    gamepackBytes = GameHelpers.readStream(inputStream);
+                    gamepackBytes = StreamUtility.readBytes(inputStream);
                 } else {
                     gamepackBytes = new byte[fileSize];
                     for (int index = 0, bytesRead;
