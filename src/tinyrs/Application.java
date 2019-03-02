@@ -5,12 +5,10 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.concurrent.Callable;
-import java.util.concurrent.FutureTask;
-import java.util.concurrent.RunnableFuture;
 import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
 
+import tinyrs.gui.PopupBuilder;
 import tinyrs.utils.AppletUtility;
 
 public class Application {
@@ -30,38 +28,29 @@ public class Application {
             } else if (argument.startsWith("storageDirectory=")) {
                 File specifiedDirectory = new File(argument.substring(17));
                 if (!specifiedDirectory.exists()) {
-                    try {
-                        RunnableFuture<Integer> promptTask = new FutureTask<Integer>(new Callable<Integer>() {
-
-                            @Override
-                            public Integer call() throws Exception {
-                                return JOptionPane.showOptionDialog(null,
-                                        "The storage directory you specified does not exist. Do you want to create it?",
-                                        "Directory Missing",
-                                        JOptionPane.YES_NO_OPTION,
-                                        JOptionPane.QUESTION_MESSAGE,
-                                        null, null, null);
-                            }
-                        });
-                        EventQueue.invokeAndWait(promptTask);
-                        if (promptTask.get() != JOptionPane.YES_OPTION) {
-                            continue;
-                        }
-                    } catch (Exception e) {
-                        e.printStackTrace();
+                    int createOption = new PopupBuilder()
+                            .withMessage("The storage directory you specified does not exist. Do you want to create it?")
+                            .withTitle("Directory Missing")
+                            .withMessageType(JOptionPane.QUESTION_MESSAGE)
+                            .showYesNoInput();
+                    if (createOption != JOptionPane.YES_OPTION) {
                         continue;
                     }
                     if (!specifiedDirectory.mkdirs()) {
-                        showMessage("Could not create the specified directory.",
-                                "Directory Error",
-                                JOptionPane.WARNING_MESSAGE);
+                        new PopupBuilder()
+                                .withMessage("Could not create the specified directory.")
+                                .withTitle("Directory Error")
+                                .withMessageType(JOptionPane.WARNING_MESSAGE)
+                                .showMessage();
                         continue;
                     }
                 }
                 if (!specifiedDirectory.canRead() || !specifiedDirectory.canWrite()) {
-                    showMessage("You do not have permission to read or write in the specified storage directory.",
-                            "Missing Permissions",
-                            JOptionPane.INFORMATION_MESSAGE);
+                    new PopupBuilder()
+                            .withMessage("You do not have permission to read or write in the specified storage directory.")
+                            .withTitle("Missing Permissions")
+                            .withMessageType(JOptionPane.INFORMATION_MESSAGE)
+                            .showMessage();
                     continue;
                 }
                 storageDirectory = specifiedDirectory;
@@ -80,16 +69,20 @@ public class Application {
                         loadedProperties = true;
                     } catch (IOException e) {
                         e.printStackTrace();
-                        showMessage("Could not load the existing properties file.",
-                                "Load Error",
-                                JOptionPane.INFORMATION_MESSAGE);
+                        new PopupBuilder()
+                                .withMessage("Could not load the existing properties file.")
+                                .withTitle("Load Error")
+                                .withMessageType(JOptionPane.INFORMATION_MESSAGE)
+                                .showMessage();
                     }
                 }
             } else {
                 storageDirectory = null;
-                showMessage("Could not create a readable and writable storage directory in the user home folder.",
-                        "Directory Error",
-                        JOptionPane.WARNING_MESSAGE);
+                new PopupBuilder()
+                        .withMessage("Could not create a readable and writable storage directory in the user home folder.")
+                        .withTitle("Directory Error")
+                        .withMessageType(JOptionPane.WARNING_MESSAGE)
+                        .showMessage();
             }
         }
         if (defaultWorld != null) {
@@ -120,20 +113,6 @@ public class Application {
             } catch (IOException e) {
                 e.printStackTrace();
             }
-        }
-    }
-
-    private static void showMessage(final String message, final String title, final int type) {
-        try {
-            EventQueue.invokeAndWait(new Runnable() {
-
-                @Override
-                public void run() {
-                    JOptionPane.showMessageDialog(null, message, title, type);
-                }
-            });
-        } catch (Exception e) {
-            e.printStackTrace();
         }
     }
 }

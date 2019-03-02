@@ -48,6 +48,7 @@ import javax.swing.JPanel;
 import javax.swing.JProgressBar;
 import javax.swing.SwingWorker;
 
+import tinyrs.gui.PopupBuilder;
 import tinyrs.utils.AppletUtility;
 import tinyrs.utils.StreamUtility;
 import tinyrs.utils.VersionUtility;
@@ -72,10 +73,12 @@ class GameWindow extends JFrame {
                             Desktop.getDesktop().open(storageDirectory);
                         } catch (Exception e) {
                             e.printStackTrace();
-                            JOptionPane.showMessageDialog(GameWindow.this,
-                                    "Could not open the storage directory.",
-                                    "Directory Error",
-                                    JOptionPane.WARNING_MESSAGE);
+                            new PopupBuilder()
+                                    .withParent(GameWindow.this)
+                                    .withMessage("Could not open the storage directory.")
+                                    .withTitle("Directory Error")
+                                    .withMessageType(JOptionPane.WARNING_MESSAGE)
+                                    .showMessage();
                         }
                     }
                 });
@@ -97,10 +100,12 @@ class GameWindow extends JFrame {
                             screenshotItem.setEnabled(false);
                             screenshotItem.removeActionListener(this);
                             e.printStackTrace();
-                            JOptionPane.showMessageDialog(GameWindow.this,
-                                    "Could not initialize the facility for taking screenshots.",
-                                    "Screenshot Error",
-                                    JOptionPane.ERROR_MESSAGE);
+                            new PopupBuilder()
+                                    .withParent(GameWindow.this)
+                                    .withMessage("Could not initialize the facility for taking screenshots.")
+                                    .withTitle("Screenshot Error")
+                                    .withMessageType(JOptionPane.ERROR_MESSAGE)
+                                    .showMessage();
                             return;
                         }
                     }
@@ -128,10 +133,12 @@ class GameWindow extends JFrame {
                                     get();
                                 } catch (Exception e) {
                                     e.printStackTrace();
-                                    JOptionPane.showMessageDialog(GameWindow.this,
-                                            "Could not take a screenshot.",
-                                            "Screenshot Error",
-                                            JOptionPane.WARNING_MESSAGE);
+                                    new PopupBuilder()
+                                            .withParent(GameWindow.this)
+                                            .withMessage("Could not take a screenshot.")
+                                            .withTitle("Screenshot Error")
+                                            .withMessageType(JOptionPane.WARNING_MESSAGE)
+                                            .showMessage();
                                 }
                             }
                         }.execute();
@@ -144,28 +151,34 @@ class GameWindow extends JFrame {
 
                 @Override
                 public void actionPerformed(ActionEvent actionEvent) {
-                    String input = JOptionPane.showInputDialog(GameWindow.this,
-                            "Please enter a world number.",
-                            "Enter World",
-                            JOptionPane.INFORMATION_MESSAGE);
+                    String input = new PopupBuilder()
+                            .withParent(GameWindow.this)
+                            .withMessage("Please enter a world number.")
+                            .withTitle("Enter World")
+                            .withMessageType(JOptionPane.INFORMATION_MESSAGE)
+                            .showTextInput();
                     if (input != null && !input.isEmpty()) {
                         int world;
                         try {
                             world = Integer.parseInt(input);
                         } catch (NumberFormatException expected) {
-                            JOptionPane.showMessageDialog(GameWindow.this,
-                                    "Please enter a positive integer.",
-                                    "Input Error",
-                                    JOptionPane.INFORMATION_MESSAGE);
+                            new PopupBuilder()
+                                    .withParent(GameWindow.this)
+                                    .withMessage("Please enter a positive integer.")
+                                    .withTitle("Input Error")
+                                    .withMessageType(JOptionPane.INFORMATION_MESSAGE)
+                                    .showMessage();
                             return;
                         }
                         if (AppletUtility.isValidWorld(world)) {
                             GlobalProperty.DEFAULT_WORLD.set(input);
                         } else {
-                            JOptionPane.showMessageDialog(GameWindow.this,
-                                    "This world is unreachable or does not exist.",
-                                    "World Error",
-                                    JOptionPane.INFORMATION_MESSAGE);
+                            new PopupBuilder()
+                                    .withParent(GameWindow.this)
+                                    .withMessage("This world is unreachable or does not exist.")
+                                    .withTitle("World Error")
+                                    .withMessageType(JOptionPane.INFORMATION_MESSAGE)
+                                    .showMessage();
                         }
                     }
                 }
@@ -225,12 +238,13 @@ class GameWindow extends JFrame {
             public void windowClosing(WindowEvent windowEvent) {
                 boolean confirmClose = GlobalProperty.CONFIRM_CLOSE.get(boolean.class);
                 if (confirmClose) {
-                    int userDecision = JOptionPane.showOptionDialog(GameWindow.this,
-                            "Are you sure you want to close?",
-                            "Confirm Close",
-                            JOptionPane.YES_NO_OPTION,
-                            JOptionPane.QUESTION_MESSAGE, null, null, null);
-                    if (userDecision != JOptionPane.YES_OPTION) {
+                    int closeOption = new PopupBuilder()
+                            .withParent(GameWindow.this)
+                            .withMessage("Are you sure you want to close?")
+                            .withTitle("Confirm Close")
+                            .withMessageType(JOptionPane.QUESTION_MESSAGE)
+                            .showYesNoInput();
+                    if (closeOption != JOptionPane.YES_OPTION) {
                         return;
                     }
                 }
@@ -331,10 +345,12 @@ class GameWindow extends JFrame {
                     gameApplet = get();
                 } catch (Exception e) {
                     e.printStackTrace();
-                    JOptionPane.showMessageDialog(GameWindow.this,
-                            "Could not start the game client.",
-                            "Game Error",
-                            JOptionPane.ERROR_MESSAGE);
+                    new PopupBuilder()
+                            .withParent(GameWindow.this)
+                            .withMessage("Could not start the game client.")
+                            .withTitle("Game Error")
+                            .withMessageType(JOptionPane.ERROR_MESSAGE)
+                            .showMessage();
                     return;
                 }
                 centerPanel.removeAll();
@@ -445,10 +461,12 @@ class GameWindow extends JFrame {
                 get();
             } catch (Exception e) {
                 e.printStackTrace();
-                JOptionPane.showMessageDialog(GameWindow.this,
-                        "Could not download the game client.",
-                        "Download Error",
-                        JOptionPane.ERROR_MESSAGE);
+                new PopupBuilder()
+                        .withParent(GameWindow.this)
+                        .withMessage("Could not download the game client.")
+                        .withTitle("Download Error")
+                        .withMessageType(JOptionPane.ERROR_MESSAGE)
+                        .showMessage();
                 return;
             }
             try {
