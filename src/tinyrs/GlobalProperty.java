@@ -15,24 +15,10 @@ public enum GlobalProperty {
     ALWAYS_ON_TOP(false);
 
     private final Object defaultValue;
-    private final Class<?> type;
     private volatile Object value;
 
     GlobalProperty(final Object defaultValue) {
         this.defaultValue = defaultValue;
-        type = defaultValue.getClass();
-        value = defaultValue;
-    }
-
-    GlobalProperty(final int defaultValue) {
-        this.defaultValue = defaultValue;
-        type = int.class;
-        value = defaultValue;
-    }
-
-    GlobalProperty(final boolean defaultValue) {
-        this.defaultValue = defaultValue;
-        type = boolean.class;
         value = defaultValue;
     }
 
@@ -64,11 +50,12 @@ public enum GlobalProperty {
     }
 
     private void assertCompatibleType(final Class<?> type) {
-        boolean compatible = type == Object.class || type.isAssignableFrom(this.type);
-        if (this.type == int.class) {
-            compatible |= Integer.class.isAssignableFrom(type);
-        } else if (this.type == boolean.class) {
-            compatible |= Boolean.class.isAssignableFrom(type);
+        final Class<?> thisType = value.getClass();
+        boolean compatible = type == Object.class || type.isAssignableFrom(thisType);
+        if (thisType == Integer.class) {
+            compatible |= type == int.class;
+        } else if (thisType == Boolean.class) {
+            compatible |= type == boolean.class;
         }
         if (!compatible) {
             throw new IllegalArgumentException("The provided type is incompatible with this property's.");

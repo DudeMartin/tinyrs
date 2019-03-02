@@ -110,7 +110,8 @@ public class Application {
             public void run() {
                 if (Application.storageDirectory != null) {
                     try {
-                        GlobalProperty.write(new FileOutputStream(new File(Application.storageDirectory, "tinyrs.properties")));
+                        GlobalProperty.write(new FileOutputStream(
+                                new File(Application.storageDirectory, "tinyrs.properties")));
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
