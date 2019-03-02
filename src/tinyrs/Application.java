@@ -104,15 +104,18 @@ public class Application {
                 window.setVisible(true);
             }
         });
-    }
+        Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
 
-    static void saveProperties() {
-        if (storageDirectory != null) {
-            try {
-                GlobalProperty.write(new FileOutputStream(new File(storageDirectory, "tinyrs.properties")));
-            } catch (IOException e) {
-                e.printStackTrace();
+            @Override
+            public void run() {
+                if (Application.storageDirectory != null) {
+                    try {
+                        GlobalProperty.write(new FileOutputStream(new File(Application.storageDirectory, "tinyrs.properties")));
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
             }
-        }
+        }));
     }
 }

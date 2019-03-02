@@ -248,7 +248,6 @@ class GameWindow extends JFrame {
                         return;
                     }
                 }
-                Application.saveProperties();
                 System.exit(0);
             }
         });
