@@ -60,7 +60,7 @@ class GameWindow extends JFrame {
     GameWindow() {
         JMenuBar menuBar = new JMenuBar();
         JMenu fileMenu = new JMenu("File");
-        final String storageDirectory = Application.properties.getProperty("storageDirectory");
+        final String storageDirectory = Application.storageDirectory;
         if (storageDirectory != null) {
             if (Desktop.isDesktopSupported()) {
                 JMenuItem openDirectoryItem = new JMenuItem("Open storage directory", loadIcon("folder.png"));
@@ -113,11 +113,11 @@ class GameWindow extends JFrame {
                             @Override
                             protected Void doInBackground() throws Exception {
                                 Thread.sleep(250);
-                                String screenshotFormat = Application.properties.getProperty("screenshotFormat");
+                                String screenshotFormat = GlobalProperty.SCREENSHOT_FORMAT.get();
                                 if (!ImageIO.write(robot.createScreenCapture(visibleArea),
                                         screenshotFormat,
                                         new File(screenshotDirectory, "Screenshot-" + dateFormat.format(new Date()) + '.' + screenshotFormat))) {
-                                    Application.properties.setProperty("screenshotFormat", "png");
+                                    GlobalProperty.SCREENSHOT_FORMAT.setDefault();
                                 }
                                 return null;
                             }
@@ -160,7 +160,7 @@ class GameWindow extends JFrame {
                             return;
                         }
                         if (AppletUtility.isValidWorld(world)) {
-                            Application.properties.setProperty("defaultWorld", input);
+                            GlobalProperty.DEFAULT_WORLD.set(input);
                         } else {
                             JOptionPane.showMessageDialog(GameWindow.this,
                                     "This world is unreachable or does not exist.",
@@ -174,12 +174,12 @@ class GameWindow extends JFrame {
         }
         final JCheckBoxMenuItem confirmCloseItem = new JCheckBoxMenuItem("Confirm on close",
                 loadIcon("confirm.png"),
-                Boolean.valueOf(Application.properties.getProperty("confirmClose")));
+                GlobalProperty.CONFIRM_CLOSE.get(boolean.class));
         confirmCloseItem.addItemListener(new ItemListener() {
 
             @Override
             public void itemStateChanged(ItemEvent itemEvent) {
-                Application.properties.setProperty("confirmClose", Boolean.toString(confirmCloseItem.isSelected()));
+                GlobalProperty.CONFIRM_CLOSE.set(confirmCloseItem.isSelected());
             }
         });
         fileMenu.add(confirmCloseItem);
@@ -194,12 +194,12 @@ class GameWindow extends JFrame {
         fileMenu.add(defaultSizeItem);
         final JCheckBoxMenuItem alwaysOnTopItem = new JCheckBoxMenuItem("Always on top",
                 loadIcon("top.png"),
-                Boolean.valueOf(Application.properties.getProperty("alwaysOnTop")));
+                GlobalProperty.ALWAYS_ON_TOP.get(boolean.class));
         alwaysOnTopItem.addItemListener(new ItemListener() {
 
             @Override
             public void itemStateChanged(ItemEvent itemEvent) {
-                Application.properties.setProperty("alwaysOnTop", Boolean.toString(alwaysOnTopItem.isSelected()));
+                GlobalProperty.ALWAYS_ON_TOP.set(alwaysOnTopItem.isSelected());
                 setAlwaysOnTop(alwaysOnTopItem.isSelected());
             }
         });
@@ -223,7 +223,7 @@ class GameWindow extends JFrame {
 
             @Override
             public void windowClosing(WindowEvent windowEvent) {
-                boolean confirmClose = Application.properties.getProperty("confirmClose", "false").equalsIgnoreCase("true");
+                boolean confirmClose = GlobalProperty.CONFIRM_CLOSE.get(boolean.class);
                 if (confirmClose) {
                     int userDecision = JOptionPane.showOptionDialog(GameWindow.this,
                             "Are you sure you want to close?",
@@ -286,7 +286,7 @@ class GameWindow extends JFrame {
                 AppletStub gameAppletStub = new AppletStub() {
 
                     private final URL pageAddress =
-                            new URL("http://oldschool" + Application.properties.getProperty("defaultWorld") + ".runescape.com");
+                            new URL("http://oldschool" + GlobalProperty.DEFAULT_WORLD.get() + ".runescape.com");
                     private final Map<String, String> parameters =
                             AppletUtility.parseParameters(new String(StreamUtility.readBytes(pageAddress.openStream())));
 
@@ -361,7 +361,7 @@ class GameWindow extends JFrame {
 
     private static URL defaultGamepackAddress() {
         try {
-            return new URL("http://oldschool" + Application.properties.getProperty("defaultWorld") + ".runescape.com/gamepack.jar");
+            return new URL("http://oldschool" + GlobalProperty.DEFAULT_WORLD.get() + ".runescape.com/gamepack.jar");
         } catch (MalformedURLException impossible) {
             throw new Error(impossible);
         }

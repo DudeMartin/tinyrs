@@ -5,7 +5,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.Properties;
 import java.util.concurrent.Callable;
 import java.util.concurrent.FutureTask;
 import java.util.concurrent.RunnableFuture;
@@ -16,14 +15,7 @@ import tinyrs.utils.AppletUtility;
 
 public class Application {
 
-    static final Properties properties;
-    static {
-        properties = new Properties();
-        properties.setProperty("screenshotFormat", "png");
-        properties.setProperty("confirmClose", "false");
-        properties.setProperty("alwaysOnTop", "false");
-        setDefaultWorldToTwo();
-    }
+    static String storageDirectory;
 
     public static void main(String[] arguments) {
         String defaultWorld = null;
@@ -84,7 +76,7 @@ public class Application {
                 File propertiesFile = new File(storageDirectory, "tinyrs.properties");
                 if (propertiesFile.exists()) {
                     try {
-                        properties.load(new FileInputStream(propertiesFile));
+                        GlobalProperty.read(new FileInputStream(propertiesFile));
                         loadedProperties = true;
                     } catch (IOException e) {
                         e.printStackTrace();
@@ -101,13 +93,13 @@ public class Application {
             }
         }
         if (defaultWorld != null) {
-            properties.setProperty("defaultWorld", defaultWorld);
-        } else if (loadedProperties && !AppletUtility.isValidWorld(Integer.parseInt(properties.getProperty("defaultWorld")))) {
-            setDefaultWorldToTwo();
-            System.err.println("Invalid game world specified in the properties file. Defaulting to " + properties.getProperty("defaultWorld") + "...");
+            GlobalProperty.DEFAULT_WORLD.set(defaultWorld);
+        } else if (loadedProperties && !AppletUtility.isValidWorld(GlobalProperty.DEFAULT_WORLD.get(int.class))) {
+            GlobalProperty.DEFAULT_WORLD.setDefault();
+            System.err.println("Invalid game world specified in the properties file. Defaulting to " + GlobalProperty.DEFAULT_WORLD.getDefault() + "...");
         }
         if (storageDirectory != null) {
-            properties.setProperty("storageDirectory", storageDirectory.getAbsolutePath());
+            Application.storageDirectory = storageDirectory.getAbsolutePath();
         }
         EventQueue.invokeLater(new Runnable() {
 
@@ -122,20 +114,13 @@ public class Application {
     }
 
     static void saveProperties() {
-        String storageDirectory = (String) properties.remove("storageDirectory");
         if (storageDirectory != null) {
             try {
-                properties.store(new FileOutputStream(new File(storageDirectory, "tinyrs.properties")), null);
+                GlobalProperty.write(new FileOutputStream(new File(storageDirectory, "tinyrs.properties")));
             } catch (IOException e) {
                 e.printStackTrace();
-            } finally {
-                properties.setProperty("storageDirectory", storageDirectory);
             }
         }
-    }
-
-    private static void setDefaultWorldToTwo() {
-        properties.setProperty("defaultWorld", "2");
     }
 
     private static void showMessage(final String message, final String title, final int type) {
