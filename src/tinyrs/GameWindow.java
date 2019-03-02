@@ -60,7 +60,7 @@ class GameWindow extends JFrame {
     GameWindow() {
         JMenuBar menuBar = new JMenuBar();
         JMenu fileMenu = new JMenu("File");
-        final String storageDirectory = Application.storageDirectory;
+        final File storageDirectory = Application.storageDirectory;
         if (storageDirectory != null) {
             if (Desktop.isDesktopSupported()) {
                 JMenuItem openDirectoryItem = new JMenuItem("Open storage directory", loadIcon("folder.png"));
@@ -69,7 +69,7 @@ class GameWindow extends JFrame {
                     @Override
                     public void actionPerformed(ActionEvent actionEvent) {
                         try {
-                            Desktop.getDesktop().open(new File(storageDirectory));
+                            Desktop.getDesktop().open(storageDirectory);
                         } catch (Exception e) {
                             e.printStackTrace();
                             JOptionPane.showMessageDialog(GameWindow.this,
@@ -240,7 +240,7 @@ class GameWindow extends JFrame {
         });
     }
 
-    private void loadGame(String storageDirectory) {
+    private void loadGame(File storageDirectory) {
         started = true;
         if (storageDirectory == null) {
             JLabel loadingLabel = new JLabel("Loading...");

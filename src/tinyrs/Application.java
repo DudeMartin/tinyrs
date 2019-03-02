@@ -15,7 +15,7 @@ import tinyrs.utils.AppletUtility;
 
 public class Application {
 
-    static String storageDirectory;
+    static File storageDirectory;
 
     public static void main(String[] arguments) {
         String defaultWorld = null;
@@ -99,7 +99,7 @@ public class Application {
             System.err.println("Invalid game world specified in the properties file. Defaulting to " + GlobalProperty.DEFAULT_WORLD.getDefault() + "...");
         }
         if (storageDirectory != null) {
-            Application.storageDirectory = storageDirectory.getAbsolutePath();
+            Application.storageDirectory = storageDirectory;
         }
         EventQueue.invokeLater(new Runnable() {
 
