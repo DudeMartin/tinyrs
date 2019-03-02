@@ -4,10 +4,8 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Scanner;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 
 public enum GlobalProperty {
 
@@ -16,34 +14,31 @@ public enum GlobalProperty {
     CONFIRM_CLOSE(false),
     ALWAYS_ON_TOP(false);
 
-    private static final Map<GlobalProperty, Object> globalProperties = new ConcurrentHashMap<GlobalProperty, Object>();
-    static {
-        for (final GlobalProperty property : values()) {
-            globalProperties.put(property, property.defaultValue);
-        }
-    }
-
     private final Object defaultValue;
     private final Class<?> type;
+    private volatile Object value;
 
     GlobalProperty(final Object defaultValue) {
         this.defaultValue = defaultValue;
-        this.type = defaultValue.getClass();
+        type = defaultValue.getClass();
+        value = defaultValue;
     }
 
     GlobalProperty(final int defaultValue) {
         this.defaultValue = defaultValue;
-        this.type = int.class;
+        type = int.class;
+        value = defaultValue;
     }
 
     GlobalProperty(final boolean defaultValue) {
         this.defaultValue = defaultValue;
-        this.type = boolean.class;
+        type = boolean.class;
+        value = defaultValue;
     }
 
     public <T> T get(final Class<T> type) {
         assertCompatibleType(type);
-        return (T) globalProperties.get(this);
+        return (T) value;
     }
 
     public String get() {
@@ -61,11 +56,11 @@ public enum GlobalProperty {
 
     public void set(final Object value) {
         assertCompatibleType(value.getClass());
-        globalProperties.put(this, value);
+        this.value = value;
     }
 
     public void setDefault() {
-        globalProperties.put(this, defaultValue);
+        value = defaultValue;
     }
 
     private void assertCompatibleType(final Class<?> type) {
@@ -101,7 +96,7 @@ public enum GlobalProperty {
                     unrecognizedProperties.add(propertyName);
                     continue;
                 }
-                globalProperties.put(property, convertFromString(line.substring(equalsIndex + 1)));
+                property.set(convertFromString(line.substring(equalsIndex + 1)));
             }
         } finally {
             scanner.close();
@@ -113,7 +108,7 @@ public enum GlobalProperty {
         final PrintWriter printWriter = new PrintWriter(outputStream);
         try {
             for (final GlobalProperty property : values()) {
-                printWriter.println(property.toString() + '=' + globalProperties.get(property));
+                printWriter.println(property.toString() + '=' + property.get());
             }
             printWriter.println();
         } finally {
