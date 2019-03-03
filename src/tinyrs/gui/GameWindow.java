@@ -37,6 +37,7 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.jar.JarFile;
 import javax.imageio.ImageIO;
+import javax.swing.Icon;
 import javax.swing.ImageIcon;
 import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JFrame;
@@ -57,6 +58,9 @@ import tinyrs.utils.VersionUtility;
 
 public class GameWindow extends JFrame {
 
+    private static final Icon FOLDER_ICON = loadIcon("folder.png");
+    private static final Icon CAMERA_ICON = loadIcon("camera.png");
+    private static final Icon WORLD_ICON = loadIcon("world.png");
     private final JPanel centerPanel = new CenterPanel();
     private boolean started;
 
@@ -66,7 +70,7 @@ public class GameWindow extends JFrame {
         final File storageDirectory = Application.storageDirectory;
         if (storageDirectory != null) {
             if (Desktop.isDesktopSupported()) {
-                JMenuItem openDirectoryItem = new JMenuItem("Open storage directory", loadIcon("folder.png"));
+                JMenuItem openDirectoryItem = new JMenuItem("Open storage directory", FOLDER_ICON);
                 openDirectoryItem.addActionListener(new ActionListener() {
 
                     @Override
@@ -78,15 +82,16 @@ public class GameWindow extends JFrame {
                             new PopupBuilder()
                                     .withParent(GameWindow.this)
                                     .withMessage("Could not open the storage directory.")
-                                    .withTitle("Directory Error")
+                                    .withTitle("Storage Error")
                                     .withMessageType(JOptionPane.WARNING_MESSAGE)
+                                    .withIcon(FOLDER_ICON)
                                     .showMessage();
                         }
                     }
                 });
                 fileMenu.add(openDirectoryItem);
             }
-            final JMenuItem screenshotItem = new JMenuItem("Take screenshot", loadIcon("camera.png"));
+            final JMenuItem screenshotItem = new JMenuItem("Take screenshot", CAMERA_ICON);
             screenshotItem.addActionListener(new ActionListener() {
 
                 private final DateFormat dateFormat = new SimpleDateFormat("dd.MM.YYYY.HHmm.ss");
@@ -107,6 +112,7 @@ public class GameWindow extends JFrame {
                                     .withMessage("Could not initialize the facility for taking screenshots.")
                                     .withTitle("Screenshot Error")
                                     .withMessageType(JOptionPane.ERROR_MESSAGE)
+                                    .withIcon(CAMERA_ICON)
                                     .showMessage();
                             return;
                         }
@@ -140,6 +146,7 @@ public class GameWindow extends JFrame {
                                             .withMessage("Could not take a screenshot.")
                                             .withTitle("Screenshot Error")
                                             .withMessageType(JOptionPane.WARNING_MESSAGE)
+                                            .withIcon(CAMERA_ICON)
                                             .showMessage();
                                 }
                             }
@@ -148,7 +155,7 @@ public class GameWindow extends JFrame {
                 }
             });
             fileMenu.add(screenshotItem);
-            JMenuItem defaultWorldItem = new JMenuItem("Set default world", loadIcon("world.png"));
+            JMenuItem defaultWorldItem = new JMenuItem("Set default world", WORLD_ICON);
             defaultWorldItem.addActionListener(new ActionListener() {
 
                 @Override
@@ -158,6 +165,7 @@ public class GameWindow extends JFrame {
                             .withMessage("Please enter a world number.")
                             .withTitle("Enter World")
                             .withMessageType(JOptionPane.INFORMATION_MESSAGE)
+                            .withIcon(WORLD_ICON)
                             .showTextInput();
                     if (input != null && !input.isEmpty()) {
                         int world;
@@ -169,6 +177,7 @@ public class GameWindow extends JFrame {
                                     .withMessage("Please enter a positive integer.")
                                     .withTitle("Input Error")
                                     .withMessageType(JOptionPane.INFORMATION_MESSAGE)
+                                    .withIcon(WORLD_ICON)
                                     .showMessage();
                             return;
                         }
@@ -178,8 +187,9 @@ public class GameWindow extends JFrame {
                             new PopupBuilder()
                                     .withParent(GameWindow.this)
                                     .withMessage("This world is unreachable or does not exist.")
-                                    .withTitle("World Error")
+                                    .withTitle("Input Error")
                                     .withMessageType(JOptionPane.INFORMATION_MESSAGE)
+                                    .withIcon(WORLD_ICON)
                                     .showMessage();
                         }
                     }
@@ -368,12 +378,7 @@ public class GameWindow extends JFrame {
     }
 
     private static ImageIcon loadIcon(String name) {
-        try {
-            return new ImageIcon(GameWindow.class.getResource("/resources/" + name));
-        } catch (Exception e) {
-            e.printStackTrace();
-            return null;
-        }
+        return new ImageIcon(GameWindow.class.getResource("/resources/" + name));
     }
 
     private static URL defaultGamepackAddress() {

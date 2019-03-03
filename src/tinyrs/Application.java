@@ -31,7 +31,7 @@ public class Application {
                 if (!specifiedDirectory.exists()) {
                     int createOption = new PopupBuilder()
                             .withMessage("The storage directory you specified does not exist. Do you want to create it?")
-                            .withTitle("Directory Missing")
+                            .withTitle("Storage Error")
                             .withMessageType(JOptionPane.QUESTION_MESSAGE)
                             .showYesNoInput();
                     if (createOption != JOptionPane.YES_OPTION) {
@@ -40,7 +40,7 @@ public class Application {
                     if (!specifiedDirectory.mkdirs()) {
                         new PopupBuilder()
                                 .withMessage("Could not create the specified directory.")
-                                .withTitle("Directory Error")
+                                .withTitle("Storage Error")
                                 .withMessageType(JOptionPane.WARNING_MESSAGE)
                                 .showMessage();
                         continue;
@@ -49,7 +49,7 @@ public class Application {
                 if (!specifiedDirectory.canRead() || !specifiedDirectory.canWrite()) {
                     new PopupBuilder()
                             .withMessage("You do not have permission to read or write in the specified storage directory.")
-                            .withTitle("Missing Permissions")
+                            .withTitle("Storage Error")
                             .withMessageType(JOptionPane.INFORMATION_MESSAGE)
                             .showMessage();
                     continue;
@@ -72,7 +72,7 @@ public class Application {
                         e.printStackTrace();
                         new PopupBuilder()
                                 .withMessage("Could not load the existing properties file.")
-                                .withTitle("Load Error")
+                                .withTitle("Properties Error")
                                 .withMessageType(JOptionPane.INFORMATION_MESSAGE)
                                 .showMessage();
                     }
@@ -81,7 +81,7 @@ public class Application {
                 storageDirectory = null;
                 new PopupBuilder()
                         .withMessage("Could not create a readable and writable storage directory in the user home folder.")
-                        .withTitle("Directory Error")
+                        .withTitle("Storage Error")
                         .withMessageType(JOptionPane.WARNING_MESSAGE)
                         .showMessage();
             }

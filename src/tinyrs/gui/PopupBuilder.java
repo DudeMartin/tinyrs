@@ -58,7 +58,7 @@ public final class PopupBuilder {
 
             @Override
             public String call() {
-                return JOptionPane.showInputDialog(parent, message, title, messageType);
+                return (String) JOptionPane.showInputDialog(parent, message, title, messageType, icon, null, null);
             }
         });
     }
