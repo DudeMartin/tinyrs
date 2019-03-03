@@ -39,7 +39,7 @@ import tinyrs.utils.AppletUtility;
 import tinyrs.utils.StreamUtility;
 import tinyrs.utils.VersionUtility;
 
-public class GameWindow extends JFrame {
+public final class GameWindow extends JFrame {
 
     private static final Icon FOLDER_ICON = loadIcon("folder.png");
     private static final Icon CAMERA_ICON = loadIcon("camera.png");
@@ -51,7 +51,7 @@ public class GameWindow extends JFrame {
     public GameWindow() {
         final JMenuBar menuBar = new JMenuBar();
         final JMenu fileMenu = new JMenu("File");
-        if (Application.storageDirectory() != null) {
+        if (Application.isStorageDirectoryAvailable()) {
             if (Desktop.isDesktopSupported()) {
                 final JMenuItem openDirectoryItem = new JMenuItem("Open storage directory", FOLDER_ICON);
                 openDirectoryItem.addActionListener(new OpenStorageListener(openDirectoryItem, FOLDER_ICON));
@@ -63,7 +63,7 @@ public class GameWindow extends JFrame {
             } catch (final AWTException e) {
                 e.printStackTrace();
                 new PopupBuilder()
-                        .withParent(GameWindow.this)
+                        .withParent(this)
                         .withMessage("Could not initialize the facility for taking screenshots.")
                         .withTitle("Screenshot Error")
                         .withMessageType(JOptionPane.ERROR_MESSAGE)
@@ -147,16 +147,8 @@ public class GameWindow extends JFrame {
     }
 
     private void loadGame() {
-        final File storageDirectory = Application.storageDirectory();
-        if (storageDirectory == null) {
-            try {
-                startGame(
-                        new URL("http", AppletUtility.getHostForWorld(GlobalProperty.DEFAULT_WORLD.get(int.class)), "/gamepack.jar"));
-            } catch (final MalformedURLException impossible) {
-                throw new Error(impossible);
-            }
-        } else {
-            final File gamepackFile = new File(storageDirectory, "gamepack.jar");
+        if (Application.isStorageDirectoryAvailable()) {
+            final File gamepackFile = new File(Application.storageDirectory(), "gamepack.jar");
             if (gamepackFile.exists()) {
                 new SwingWorker<Boolean, Void>() {
 
@@ -187,6 +179,13 @@ public class GameWindow extends JFrame {
                 }.execute();
             } else {
                 downloadThenStartGame(gamepackFile);
+            }
+        } else {
+            try {
+                startGame(
+                        new URL("http", AppletUtility.getHostForWorld(GlobalProperty.DEFAULT_WORLD.get(int.class)), "/gamepack.jar"));
+            } catch (final MalformedURLException impossible) {
+                throw new Error(impossible);
             }
         }
     }

@@ -12,20 +12,18 @@ import tinyrs.gui.GameWindow;
 import tinyrs.gui.PopupBuilder;
 import tinyrs.utils.AppletUtility;
 
-public class Application {
+public final class Application {
 
     private static final int INVALID_WORLD = -1;
     private static File storageDirectory;
 
     public static void main(final String[] arguments) {
-        File storageDirectory = null;
-        int defaultWorld = INVALID_WORLD;
         for (final String argument : arguments) {
             if (argument.startsWith("storageDirectory=")) {
                 final File specifiedDirectory = new File(argument.substring(17));
                 if (!specifiedDirectory.exists()) {
                     final int createOption = new PopupBuilder()
-                            .withMessage("The storage directory you specified does not exist. Do you want to create it?")
+                            .withMessage("The specified storage directory does not exist. Do you want to create it?")
                             .withTitle("Storage Error")
                             .withMessageType(JOptionPane.QUESTION_MESSAGE)
                             .showYesNoInput();
@@ -51,19 +49,18 @@ public class Application {
                 }
                 storageDirectory = specifiedDirectory;
             } else if (argument.startsWith("defaultWorld=")) {
-                defaultWorld = parseValidWorld(argument.substring(13));
+                final int defaultWorld = parseValidWorld(argument.substring(13));
                 if (defaultWorld == INVALID_WORLD) {
                     System.err.println("The specified default world is invalid. Ignoring argument...");
+                } else {
+                    GlobalProperty.DEFAULT_WORLD.set(defaultWorld);
                 }
             }
         }
         boolean loadedProperties = false;
         if (storageDirectory == null) {
             storageDirectory = new File(System.getProperty("user.home"), "tinyrs");
-            if ((storageDirectory.exists() || storageDirectory.mkdirs())
-                    && storageDirectory.canRead()
-                    && storageDirectory.canWrite()) {
-                Application.storageDirectory = storageDirectory;
+            if (isStorageDirectoryAvailable() || storageDirectory.mkdirs() && isStorageDirectoryAvailable()) {
                 final File propertiesFile = new File(storageDirectory, "tinyrs.properties");
                 if (propertiesFile.exists()) {
                     try {
@@ -86,16 +83,14 @@ public class Application {
                         .showMessage();
             }
         }
-        if (defaultWorld != INVALID_WORLD) {
-            GlobalProperty.DEFAULT_WORLD.set(defaultWorld);
-        } else if (loadedProperties && !AppletUtility.isValidWorld(GlobalProperty.DEFAULT_WORLD.get(int.class))) {
+        if (loadedProperties && !AppletUtility.isValidWorld(GlobalProperty.DEFAULT_WORLD.get(int.class))) {
             GlobalProperty.DEFAULT_WORLD.setDefault();
         }
         Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
 
             @Override
             public void run() {
-                if (Application.storageDirectory != null) {
+                if (Application.isStorageDirectoryAvailable()) {
                     try {
                         GlobalProperty.write(new FileOutputStream(
                                 new File(Application.storageDirectory, "tinyrs.properties")));
@@ -116,6 +111,10 @@ public class Application {
                 window.pack();
             }
         });
+    }
+
+    public static boolean isStorageDirectoryAvailable() {
+        return storageDirectory != null && storageDirectory.canRead() && storageDirectory.canWrite();
     }
 
     public static File storageDirectory() {

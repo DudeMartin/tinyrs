@@ -22,7 +22,7 @@ import tinyrs.gui.PopupBuilder;
 public final class TakeScreenshotListener implements ActionListener {
 
     private static final long START_DELAY_MILLIS = 250;
-    private static final DateFormat DATE_FORMAT = new SimpleDateFormat("dd.MM.YYYY.HHmm.ss");
+    private static final DateFormat DATE_FORMAT = new SimpleDateFormat("YYYYMMddHHmmss");
     private final Component target;
     private final Icon popupIcon;
     private final Robot robot;
@@ -42,14 +42,17 @@ public final class TakeScreenshotListener implements ActionListener {
                 Thread.sleep(START_DELAY_MILLIS);
                 final String screenshotFormat = GlobalProperty.SCREENSHOT_FORMAT.get();
                 final File screenshotDirectory = new File(Application.storageDirectory(), "Screenshots");
-                final File screenshotFile = new File(screenshotDirectory, DATE_FORMAT.format(new Date()) + '.' + screenshotFormat);
+                if (!screenshotDirectory.exists() && !screenshotDirectory.mkdirs()) {
+                    throw new Exception("Failed to create the screenshot directory.");
+                }
+                final File screenshotFile = new File(screenshotDirectory, "Screenshot-" + DATE_FORMAT.format(new Date()) + '.' + screenshotFormat);
                 final Rectangle visibleArea = target.getGraphicsConfiguration().getBounds().intersection(new Rectangle(
                         target.getLocationOnScreen(),
                         target.getSize()));
                 final BufferedImage screenshot = robot.createScreenCapture(visibleArea);
                 if (!ImageIO.write(screenshot, screenshotFormat, screenshotFile)) {
                     GlobalProperty.SCREENSHOT_FORMAT.setDefault();
-                    throw new Exception();
+                    throw new Exception("Unsupported screenshot format.");
                 }
                 return null;
             }
@@ -59,6 +62,7 @@ public final class TakeScreenshotListener implements ActionListener {
                 try {
                     get();
                 } catch (final Exception e) {
+                    e.printStackTrace();
                     new PopupBuilder()
                             .withParent(target)
                             .withMessage("Could not take a screenshot.")
