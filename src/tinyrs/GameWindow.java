@@ -34,6 +34,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.jar.JarFile;
 import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
@@ -407,34 +408,34 @@ class GameWindow extends JFrame {
 
     private class GamepackDownloadWorker extends SwingWorker<Void, Integer> {
 
-        private final File gamepackFile;
+        private final File destinationFile;
         private final JProgressBar progressBar;
 
-        private GamepackDownloadWorker(File gamepackFile, JProgressBar progressBar) {
-            this.gamepackFile = gamepackFile;
+        private GamepackDownloadWorker(final File destinationFile, final JProgressBar progressBar) {
+            this.destinationFile = destinationFile;
             this.progressBar = progressBar;
         }
 
         @Override
         protected Void doInBackground() throws Exception {
-            URLConnection gamepackConnection = defaultGamepackAddress().openConnection();
-            int fileSize = gamepackConnection.getContentLength();
-            InputStream inputStream = gamepackConnection.getInputStream();
-            byte[] gamepackBytes;
-            try {
-                if (fileSize == -1) {
-                    publish(-1);
-                    gamepackBytes = StreamUtility.readBytes(inputStream);
-                } else {
-                    gamepackBytes = new byte[fileSize];
-                    for (int index = 0, bytesRead;
-                         index < fileSize && (bytesRead = inputStream.read(gamepackBytes, index, fileSize - index)) >= 0;
-                         index += bytesRead, publish(index * 100 / fileSize));
-                }
-            } finally {
-                inputStream.close();
+            final URLConnection gamepackConnection = defaultGamepackAddress().openConnection();
+            final int gamepackSize = gamepackConnection.getContentLength();
+            publish(gamepackSize == -1 ? Integer.MIN_VALUE : 0);
+            final InputStream gamepackStream = gamepackConnection.getInputStream();
+            final byte[] gamepackBytes;
+            if (gamepackSize == -1) {
+                gamepackBytes = StreamUtility.readBytes(gamepackStream);
+            } else {
+                final AtomicInteger totalBytesRead = new AtomicInteger();
+                gamepackBytes = StreamUtility.readBytes(gamepackStream, new StreamUtility.ReadListener() {
+
+                    @Override
+                    public void onBytesRead(final int amount) {
+                        publish(100 * totalBytesRead.addAndGet(amount) / gamepackSize);
+                    }
+                });
             }
-            OutputStream fileStream = new FileOutputStream(gamepackFile);
+            final OutputStream fileStream = new FileOutputStream(destinationFile);
             try {
                 fileStream.write(gamepackBytes);
             } finally {
@@ -444,9 +445,9 @@ class GameWindow extends JFrame {
         }
 
         @Override
-        protected void process(List<Integer> list) {
-            for (Integer percentage : list) {
-                if (percentage == -1) {
+        protected void process(final List<Integer> chunks) {
+            for (final Integer percentage : chunks) {
+                if (percentage == Integer.MIN_VALUE) {
                     progressBar.setIndeterminate(true);
                     return;
                 }
@@ -458,7 +459,7 @@ class GameWindow extends JFrame {
         protected void done() {
             try {
                 get();
-            } catch (Exception e) {
+            } catch (final Exception e) {
                 e.printStackTrace();
                 new PopupBuilder()
                         .withParent(GameWindow.this)
@@ -469,7 +470,7 @@ class GameWindow extends JFrame {
                 return;
             }
             try {
-                startGameClient(gamepackFile.toURI().toURL());
+                startGameClient(destinationFile.toURI().toURL());
             } catch (MalformedURLException impossible) {
                 throw new Error(impossible);
             }

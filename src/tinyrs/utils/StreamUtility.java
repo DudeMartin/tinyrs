@@ -10,13 +10,25 @@ public final class StreamUtility {
 
     }
 
-    public static byte[] readBytes(InputStream stream) throws IOException {
-        ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
-        byte[] buffer = new byte[1024];
+    public static byte[] readBytes(final InputStream stream, final ReadListener readListener) throws IOException {
+        final ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
+        final byte[] buffer = new byte[1024];
         int bytesRead;
         while ((bytesRead = stream.read(buffer)) > 0) {
             byteStream.write(buffer, 0, bytesRead);
+            if (readListener != null) {
+                readListener.onBytesRead(bytesRead);
+            }
         }
         return byteStream.toByteArray();
+    }
+
+    public static byte[] readBytes(final InputStream stream) throws IOException {
+        return readBytes(stream, null);
+    }
+
+    public interface ReadListener {
+
+        void onBytesRead(int amount);
     }
 }
