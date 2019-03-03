@@ -13,7 +13,6 @@ import java.awt.event.ItemListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
-import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -151,63 +150,80 @@ public class GameWindow extends JFrame {
         final File storageDirectory = Application.storageDirectory();
         if (storageDirectory == null) {
             try {
-                startGameClient(
+                startGame(
                         new URL("http", AppletUtility.getHostForWorld(GlobalProperty.DEFAULT_WORLD.get(int.class)), "/gamepack.jar"));
-            } catch (MalformedURLException impossible) {
+            } catch (final MalformedURLException impossible) {
                 throw new Error(impossible);
             }
         } else {
             final File gamepackFile = new File(storageDirectory, "gamepack.jar");
             if (gamepackFile.exists()) {
-                boolean latestRevision;
-                try {
-                    latestRevision = VersionUtility.isLatestRevision(VersionUtility.getRevision(new JarFile(gamepackFile)));
-                } catch (IOException e) {
-                    e.printStackTrace();
-                    latestRevision = false;
-                }
-                if (latestRevision) {
-                    try {
-                        startGameClient(gamepackFile.toURI().toURL());
-                    } catch (MalformedURLException impossible) {
-                        throw new Error(impossible);
-                    }
-                    return;
-                }
-            }
-            JProgressBar progressBar = new JProgressBar();
-            progressBar.setStringPainted(true);
-            centerPanel.add(progressBar);
-            centerPanel.validate();
-            centerPanel.showTextAbove("Downloading...", progressBar, 15);
-            centerPanel.repaint();
-            new GamepackDownloadWorker(gamepackFile, progressBar) {
+                new SwingWorker<Boolean, Void>() {
 
-                @Override
-                protected void done() {
-                    try {
-                        get();
-                    } catch (final Exception e) {
-                        e.printStackTrace();
-                        new PopupBuilder()
-                                .withParent(GameWindow.this)
-                                .withMessage("Could not download the game client.")
-                                .withTitle("Download Error")
-                                .withMessageType(JOptionPane.ERROR_MESSAGE)
-                                .showMessage();
-                        return;
+                    @Override
+                    protected Boolean doInBackground() throws Exception {
+                        return VersionUtility.isLatestRevision(VersionUtility.getRevision(new JarFile(gamepackFile)));
                     }
-                    try {
-                        startGameClient(gamepackFile.toURI().toURL());
-                    } catch (MalformedURLException impossible) {
-                        throw new Error(impossible);
+
+                    @Override
+                    protected void done() {
+                        boolean latestRevision;
+                        try {
+                            latestRevision = get();
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                            latestRevision = false;
+                        }
+                        if (latestRevision) {
+                            try {
+                                startGame(gamepackFile.toURI().toURL());
+                            } catch (final MalformedURLException impossible) {
+                                throw new Error(impossible);
+                            }
+                        } else {
+                            downloadAndStartGame(gamepackFile);
+                        }
                     }
-                }
-            }.execute();
+                }.execute();
+            } else {
+                downloadAndStartGame(gamepackFile);
+            }
         }
     }
 
-    private void startGameClient(final URL gamepackAddress) {
+    private void downloadAndStartGame(final File gamepackFile) {
+        final JProgressBar progressBar = new JProgressBar();
+        progressBar.setStringPainted(true);
+        centerPanel.add(progressBar);
+        centerPanel.validate();
+        centerPanel.showTextAbove("Downloading...", progressBar, 15);
+        centerPanel.repaint();
+        new GamepackDownloadWorker(gamepackFile, progressBar) {
+
+            @Override
+            protected void done() {
+                try {
+                    get();
+                } catch (final Exception e) {
+                    e.printStackTrace();
+                    new PopupBuilder()
+                            .withParent(GameWindow.this)
+                            .withMessage("Could not download the game client.")
+                            .withTitle("Download Error")
+                            .withMessageType(JOptionPane.ERROR_MESSAGE)
+                            .showMessage();
+                    return;
+                }
+                try {
+                    startGame(gamepackFile.toURI().toURL());
+                } catch (final MalformedURLException impossible) {
+                    throw new Error(impossible);
+                }
+            }
+        }.execute();
+    }
+
+    private void startGame(final URL gamepackAddress) {
         new SwingWorker<Applet, Void>() {
 
             @Override
