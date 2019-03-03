@@ -146,6 +146,12 @@ public final class GameWindow extends JFrame {
         });
     }
 
+    private void showErrorText(final String message) {
+        centerPanel.removeAll();
+        centerPanel.validate();
+        centerPanel.showText(message);
+    }
+
     private void loadGame() {
         if (Application.isStorageDirectoryAvailable()) {
             final File gamepackFile = new File(Application.storageDirectory(), "gamepack.jar");
@@ -196,7 +202,6 @@ public final class GameWindow extends JFrame {
         centerPanel.add(progressBar);
         centerPanel.validate();
         centerPanel.showTextAbove("Downloading...", progressBar, 15);
-        centerPanel.repaint();
         new GamepackDownloadWorker(gamepackFile, progressBar) {
 
             @Override
@@ -205,12 +210,7 @@ public final class GameWindow extends JFrame {
                     get();
                 } catch (final Exception e) {
                     e.printStackTrace();
-                    new PopupBuilder()
-                            .withParent(GameWindow.this)
-                            .withMessage("Could not download the game client.")
-                            .withTitle("Download Error")
-                            .withMessageType(JOptionPane.ERROR_MESSAGE)
-                            .showMessage();
+                    showErrorText("Could not download the game client.");
                     return;
                 }
                 try {
@@ -242,12 +242,7 @@ public final class GameWindow extends JFrame {
                     gameApplet = get();
                 } catch (final Exception e) {
                     e.printStackTrace();
-                    new PopupBuilder()
-                            .withParent(GameWindow.this)
-                            .withMessage("Could not start the game client.")
-                            .withTitle("Game Error")
-                            .withMessageType(JOptionPane.ERROR_MESSAGE)
-                            .showMessage();
+                    showErrorText("Could not start the game client.");
                     return;
                 }
                 centerPanel.removeAll();
