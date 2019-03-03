@@ -3,9 +3,9 @@ package tinyrs;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintWriter;
-import java.util.HashSet;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Scanner;
-import java.util.Set;
 
 public enum GlobalProperty {
 
@@ -55,7 +55,7 @@ public enum GlobalProperty {
     }
 
     private void assertCompatibleType(final Class<?> type) {
-        final Class<?> thisType = value.getClass();
+        final Class<?> thisType = defaultValue.getClass();
         boolean compatible = type == Object.class || type.isAssignableFrom(thisType);
         if (thisType == Integer.class) {
             compatible |= type == int.class;
@@ -67,8 +67,8 @@ public enum GlobalProperty {
         }
     }
 
-    public static Set<String> read(final InputStream inputStream) {
-        final Set<String> unrecognizedProperties = new HashSet<String>();
+    public static Collection<String> readAll(final InputStream inputStream) {
+        final Collection<String> unrecognizedProperties = new ArrayList<String>();
         final Scanner scanner = new Scanner(inputStream);
         try {
             while (scanner.hasNextLine()) {
@@ -92,7 +92,7 @@ public enum GlobalProperty {
         return unrecognizedProperties;
     }
 
-    public static void write(final OutputStream outputStream) {
+    public static void writeAll(final OutputStream outputStream) {
         final PrintWriter printWriter = new PrintWriter(outputStream);
         try {
             for (final GlobalProperty property : values()) {

@@ -43,7 +43,7 @@ public final class Application {
                     new PopupBuilder()
                             .withMessage("You do not have permission to read or write in the specified storage directory.")
                             .withTitle("Storage Error")
-                            .withMessageType(JOptionPane.INFORMATION_MESSAGE)
+                            .withMessageType(JOptionPane.WARNING_MESSAGE)
                             .showMessage();
                     continue;
                 }
@@ -64,7 +64,7 @@ public final class Application {
                 final File propertiesFile = new File(storageDirectory, "tinyrs.properties");
                 if (propertiesFile.exists()) {
                     try {
-                        GlobalProperty.read(new FileInputStream(propertiesFile));
+                        GlobalProperty.readAll(new FileInputStream(propertiesFile));
                         loadedProperties = true;
                     } catch (final IOException e) {
                         e.printStackTrace();
@@ -92,7 +92,7 @@ public final class Application {
             public void run() {
                 if (Application.isStorageDirectoryAvailable()) {
                     try {
-                        GlobalProperty.write(new FileOutputStream(
+                        GlobalProperty.writeAll(new FileOutputStream(
                                 new File(Application.storageDirectory, "tinyrs.properties")));
                     } catch (final IOException e) {
                         e.printStackTrace();

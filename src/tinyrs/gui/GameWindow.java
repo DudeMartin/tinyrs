@@ -1,7 +1,6 @@
 package tinyrs.gui;
 
 import java.applet.Applet;
-import java.awt.AWTException;
 import java.awt.BorderLayout;
 import java.awt.Desktop;
 import java.awt.Dimension;
@@ -57,20 +56,20 @@ public final class GameWindow extends JFrame {
         final JMenu fileMenu = new JMenu("File");
         if (Application.isStorageDirectoryAvailable()) {
             if (Desktop.isDesktopSupported()) {
-                final JMenuItem openDirectoryItem = new JMenuItem("Open storage directory", FOLDER_ICON);
-                openDirectoryItem.addActionListener(new OpenStorageListener(openDirectoryItem, FOLDER_ICON));
-                fileMenu.add(openDirectoryItem);
+                final JMenuItem storageItem = new JMenuItem("Open storage directory", FOLDER_ICON);
+                storageItem.addActionListener(new OpenStorageListener(storageItem, FOLDER_ICON));
+                fileMenu.add(storageItem);
             }
             Robot robot = null;
             try {
                 robot = new Robot();
-            } catch (final AWTException e) {
+            } catch (final Exception e) {
                 e.printStackTrace();
                 new PopupBuilder()
                         .withParent(this)
                         .withMessage("Could not initialize the facility for taking screenshots.")
                         .withTitle("Screenshot Error")
-                        .withMessageType(JOptionPane.ERROR_MESSAGE)
+                        .withMessageType(JOptionPane.WARNING_MESSAGE)
                         .withIcon(CAMERA_ICON)
                         .showMessage();
             }
@@ -100,7 +99,9 @@ public final class GameWindow extends JFrame {
 
             @Override
             public void actionPerformed(final ActionEvent e) {
-                centerPanel.setPreferredSize(new Dimension(765, 503));
+                centerPanel.setPreferredSize(new Dimension(
+                        GlobalProperty.LAST_WINDOW_WIDTH.getDefault(int.class),
+                        GlobalProperty.LAST_WINDOW_HEIGHT.getDefault(int.class)));
                 pack();
             }
         });
@@ -141,7 +142,9 @@ public final class GameWindow extends JFrame {
                     GlobalProperty.LAST_WINDOW_WIDTH.get(int.class),
                     GlobalProperty.LAST_WINDOW_HEIGHT.get(int.class)));
         } else {
-            centerPanel.setPreferredSize(new Dimension(765, 503));
+            centerPanel.setPreferredSize(new Dimension(
+                    GlobalProperty.LAST_WINDOW_WIDTH.getDefault(int.class),
+                    GlobalProperty.LAST_WINDOW_HEIGHT.getDefault(int.class)));
         }
         centerPanel.showText("Loading...");
         centerPanel.addComponentListener(new ComponentAdapter() {
@@ -152,6 +155,7 @@ public final class GameWindow extends JFrame {
                 GlobalProperty.LAST_WINDOW_HEIGHT.set(centerPanel.getHeight());
             }
         });
+        add(centerPanel);
         addComponentListener(new ComponentAdapter() {
 
             @Override
@@ -161,7 +165,6 @@ public final class GameWindow extends JFrame {
                 GlobalProperty.LAST_WINDOW_Y.set(screenPosition.y);
             }
         });
-        add(centerPanel);
         addWindowListener(new WindowAdapter() {
 
             @Override
