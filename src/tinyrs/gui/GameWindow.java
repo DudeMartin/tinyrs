@@ -116,7 +116,7 @@ public class GameWindow extends JFrame {
         menuBar.add(fileMenu);
         setJMenuBar(menuBar);
         setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
-        centerPanel.setPreferredSize(new Dimension(800, 550));
+        centerPanel.setPreferredSize(new Dimension(765, 503));
         centerPanel.showText("Loading...");
         add(centerPanel);
         addWindowListener(new WindowAdapter() {
@@ -253,7 +253,6 @@ public class GameWindow extends JFrame {
                 }
                 centerPanel.removeAll();
                 centerPanel.setLayout(new BorderLayout());
-                centerPanel.setPreferredSize(new Dimension(765, 503));
                 centerPanel.add(gameApplet);
                 centerPanel.validate();
                 pack();
