@@ -21,8 +21,8 @@ public final class SetDefaultWorldListener implements ActionListener {
     }
 
     @Override
-    public void actionPerformed(ActionEvent e) {
-        String worldInput = new PopupBuilder()
+    public void actionPerformed(final ActionEvent e) {
+        final String worldInput = new PopupBuilder()
                 .withParent(component)
                 .withMessage("Please enter a world number.")
                 .withTitle("Enter World")
@@ -30,10 +30,10 @@ public final class SetDefaultWorldListener implements ActionListener {
                 .withIcon(popupIcon)
                 .showTextInput();
         if (worldInput != null && !worldInput.isEmpty()) {
-            int world;
+            final int world;
             try {
                 world = Integer.parseInt(worldInput);
-            } catch (NumberFormatException expected) {
+            } catch (final NumberFormatException expected) {
                 new PopupBuilder()
                         .withParent(component)
                         .withMessage("Please enter a positive integer.")

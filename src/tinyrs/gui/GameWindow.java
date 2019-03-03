@@ -16,6 +16,7 @@ import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.jar.JarFile;
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
@@ -45,21 +46,21 @@ public class GameWindow extends JFrame {
     private static final Icon WORLD_ICON = loadIcon("world.png");
     private static final ThreadGroup gameThreads = new ThreadGroup("Game Threads");
     private final CenteredTextPanel centerPanel = new CenteredTextPanel();
-    private boolean started;
+    private final AtomicBoolean started = new AtomicBoolean();
 
     public GameWindow() {
-        JMenuBar menuBar = new JMenuBar();
-        JMenu fileMenu = new JMenu("File");
+        final JMenuBar menuBar = new JMenuBar();
+        final JMenu fileMenu = new JMenu("File");
         if (Application.storageDirectory() != null) {
             if (Desktop.isDesktopSupported()) {
-                JMenuItem openDirectoryItem = new JMenuItem("Open storage directory", FOLDER_ICON);
+                final JMenuItem openDirectoryItem = new JMenuItem("Open storage directory", FOLDER_ICON);
                 openDirectoryItem.addActionListener(new OpenStorageListener(openDirectoryItem, FOLDER_ICON));
                 fileMenu.add(openDirectoryItem);
             }
             Robot robot = null;
             try {
                 robot = new Robot();
-            } catch (AWTException e) {
+            } catch (final AWTException e) {
                 e.printStackTrace();
                 new PopupBuilder()
                         .withParent(GameWindow.this)
@@ -78,33 +79,35 @@ public class GameWindow extends JFrame {
             defaultWorldItem.addActionListener(new SetDefaultWorldListener(defaultWorldItem, WORLD_ICON));
             fileMenu.add(defaultWorldItem);
         }
-        final JCheckBoxMenuItem confirmCloseItem = new JCheckBoxMenuItem("Confirm on close",
+        final JCheckBoxMenuItem confirmCloseItem = new JCheckBoxMenuItem(
+                "Confirm on close",
                 loadIcon("confirm.png"),
                 GlobalProperty.CONFIRM_CLOSE.get(boolean.class));
         confirmCloseItem.addItemListener(new ItemListener() {
 
             @Override
-            public void itemStateChanged(ItemEvent itemEvent) {
+            public void itemStateChanged(final ItemEvent e) {
                 GlobalProperty.CONFIRM_CLOSE.set(confirmCloseItem.isSelected());
             }
         });
         fileMenu.add(confirmCloseItem);
-        JMenuItem defaultSizeItem = new JMenuItem("Set default size", loadIcon("resize.png"));
+        final JMenuItem defaultSizeItem = new JMenuItem("Set default size", loadIcon("resize.png"));
         defaultSizeItem.addActionListener(new ActionListener() {
 
             @Override
-            public void actionPerformed(ActionEvent actionEvent) {
+            public void actionPerformed(final ActionEvent e) {
                 pack();
             }
         });
         fileMenu.add(defaultSizeItem);
-        final JCheckBoxMenuItem alwaysOnTopItem = new JCheckBoxMenuItem("Always on top",
+        final JCheckBoxMenuItem alwaysOnTopItem = new JCheckBoxMenuItem(
+                "Always on top",
                 loadIcon("top.png"),
                 GlobalProperty.ALWAYS_ON_TOP.get(boolean.class));
         alwaysOnTopItem.addItemListener(new ItemListener() {
 
             @Override
-            public void itemStateChanged(ItemEvent itemEvent) {
+            public void itemStateChanged(final ItemEvent e) {
                 GlobalProperty.ALWAYS_ON_TOP.set(alwaysOnTopItem.isSelected());
                 setAlwaysOnTop(alwaysOnTopItem.isSelected());
             }
@@ -119,17 +122,16 @@ public class GameWindow extends JFrame {
         addWindowListener(new WindowAdapter() {
 
             @Override
-            public void windowActivated(WindowEvent windowEvent) {
-                if (!started) {
+            public void windowActivated(final WindowEvent e) {
+                if (started.compareAndSet(false, true)) {
                     loadGame();
                 }
             }
 
             @Override
-            public void windowClosing(WindowEvent windowEvent) {
-                boolean confirmClose = GlobalProperty.CONFIRM_CLOSE.get(boolean.class);
-                if (confirmClose) {
-                    int closeOption = new PopupBuilder()
+            public void windowClosing(final WindowEvent e) {
+                if (GlobalProperty.CONFIRM_CLOSE.get(boolean.class)) {
+                    final int closeOption = new PopupBuilder()
                             .withParent(GameWindow.this)
                             .withMessage("Are you sure you want to close?")
                             .withTitle("Confirm Close")
@@ -145,7 +147,6 @@ public class GameWindow extends JFrame {
     }
 
     private void loadGame() {
-        started = true;
         final File storageDirectory = Application.storageDirectory();
         if (storageDirectory == null) {
             try {
@@ -169,7 +170,7 @@ public class GameWindow extends JFrame {
                         boolean latestRevision;
                         try {
                             latestRevision = get();
-                        } catch (Exception e) {
+                        } catch (final Exception e) {
                             e.printStackTrace();
                             latestRevision = false;
                         }
@@ -180,17 +181,17 @@ public class GameWindow extends JFrame {
                                 throw new Error(impossible);
                             }
                         } else {
-                            downloadAndStartGame(gamepackFile);
+                            downloadThenStartGame(gamepackFile);
                         }
                     }
                 }.execute();
             } else {
-                downloadAndStartGame(gamepackFile);
+                downloadThenStartGame(gamepackFile);
             }
         }
     }
 
-    private void downloadAndStartGame(final File gamepackFile) {
+    private void downloadThenStartGame(final File gamepackFile) {
         final JProgressBar progressBar = new JProgressBar();
         progressBar.setStringPainted(true);
         centerPanel.add(progressBar);
@@ -268,7 +269,7 @@ public class GameWindow extends JFrame {
         }.execute();
     }
 
-    private static ImageIcon loadIcon(String name) {
+    private static ImageIcon loadIcon(final String name) {
         return new ImageIcon(GameWindow.class.getResource("/resources/" + name));
     }
 }
