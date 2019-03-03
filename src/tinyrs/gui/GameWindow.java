@@ -64,7 +64,7 @@ public class GameWindow extends JFrame {
     public GameWindow() {
         JMenuBar menuBar = new JMenuBar();
         JMenu fileMenu = new JMenu("File");
-        final File storageDirectory = Application.storageDirectory;
+        final File storageDirectory = Application.storageDirectory();
         if (storageDirectory != null) {
             if (Desktop.isDesktopSupported()) {
                 JMenuItem openDirectoryItem = new JMenuItem("Open storage directory", FOLDER_ICON);
