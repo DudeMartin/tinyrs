@@ -1,4 +1,4 @@
-package tinyrs;
+package tinyrs.gui;
 
 import java.applet.Applet;
 import java.applet.AppletContext;
@@ -49,17 +49,18 @@ import javax.swing.JPanel;
 import javax.swing.JProgressBar;
 import javax.swing.SwingWorker;
 
-import tinyrs.gui.PopupBuilder;
+import tinyrs.Application;
+import tinyrs.GlobalProperty;
 import tinyrs.utils.AppletUtility;
 import tinyrs.utils.StreamUtility;
 import tinyrs.utils.VersionUtility;
 
-class GameWindow extends JFrame {
+public class GameWindow extends JFrame {
 
     private final JPanel centerPanel = new CenterPanel();
     private boolean started;
 
-    GameWindow() {
+    public GameWindow() {
         JMenuBar menuBar = new JMenuBar();
         JMenu fileMenu = new JMenu("File");
         final File storageDirectory = Application.storageDirectory;
@@ -427,7 +428,7 @@ class GameWindow extends JFrame {
                 gamepackBytes = StreamUtility.readBytes(gamepackStream);
             } else {
                 final AtomicInteger totalBytesRead = new AtomicInteger();
-                gamepackBytes = StreamUtility.readBytes(gamepackStream, new StreamUtility.ReadListener() {
+                gamepackBytes = StreamUtility.readBytes(gamepackStream, new StreamUtility.ProgressListener() {
 
                     @Override
                     public void onBytesRead(final int amount) {

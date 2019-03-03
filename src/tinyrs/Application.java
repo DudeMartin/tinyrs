@@ -8,12 +8,13 @@ import java.io.IOException;
 import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
 
+import tinyrs.gui.GameWindow;
 import tinyrs.gui.PopupBuilder;
 import tinyrs.utils.AppletUtility;
 
 public class Application {
 
-    static File storageDirectory;
+    public static File storageDirectory;
 
     public static void main(String[] arguments) {
         String defaultWorld = null;

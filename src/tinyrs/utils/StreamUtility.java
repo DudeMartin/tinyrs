@@ -10,14 +10,15 @@ public final class StreamUtility {
 
     }
 
-    public static byte[] readBytes(final InputStream stream, final ReadListener readListener) throws IOException {
+    public static byte[] readBytes(final InputStream stream, final ProgressListener progressListener)
+            throws IOException {
         final ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
         final byte[] buffer = new byte[1024];
         int bytesRead;
         while ((bytesRead = stream.read(buffer)) > 0) {
             byteStream.write(buffer, 0, bytesRead);
-            if (readListener != null) {
-                readListener.onBytesRead(bytesRead);
+            if (progressListener != null) {
+                progressListener.onBytesRead(bytesRead);
             }
         }
         return byteStream.toByteArray();
@@ -27,7 +28,7 @@ public final class StreamUtility {
         return readBytes(stream, null);
     }
 
-    public interface ReadListener {
+    public interface ProgressListener {
 
         void onBytesRead(int amount);
     }
