@@ -10,7 +10,6 @@ import java.awt.Dimension;
 import java.awt.FontMetrics;
 import java.awt.Graphics;
 import java.awt.GridBagLayout;
-import java.awt.Rectangle;
 import java.awt.Robot;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -27,13 +26,9 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.net.URLConnection;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.jar.JarFile;
-import javax.imageio.ImageIO;
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
 import javax.swing.JCheckBoxMenuItem;
@@ -49,6 +44,9 @@ import javax.swing.SwingWorker;
 
 import tinyrs.Application;
 import tinyrs.GlobalProperty;
+import tinyrs.gui.menu.OpenStorageListener;
+import tinyrs.gui.menu.SetDefaultWorldListener;
+import tinyrs.gui.menu.TakeScreenshotListener;
 import tinyrs.utils.AppletUtility;
 import tinyrs.utils.StreamUtility;
 import tinyrs.utils.VersionUtility;
@@ -64,134 +62,32 @@ public class GameWindow extends JFrame {
     public GameWindow() {
         JMenuBar menuBar = new JMenuBar();
         JMenu fileMenu = new JMenu("File");
-        final File storageDirectory = Application.storageDirectory();
-        if (storageDirectory != null) {
+        if (Application.storageDirectory() != null) {
             if (Desktop.isDesktopSupported()) {
                 JMenuItem openDirectoryItem = new JMenuItem("Open storage directory", FOLDER_ICON);
-                openDirectoryItem.addActionListener(new ActionListener() {
-
-                    @Override
-                    public void actionPerformed(ActionEvent actionEvent) {
-                        try {
-                            Desktop.getDesktop().open(storageDirectory);
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                            new PopupBuilder()
-                                    .withParent(GameWindow.this)
-                                    .withMessage("Could not open the storage directory.")
-                                    .withTitle("Storage Error")
-                                    .withMessageType(JOptionPane.WARNING_MESSAGE)
-                                    .withIcon(FOLDER_ICON)
-                                    .showMessage();
-                        }
-                    }
-                });
+                openDirectoryItem.addActionListener(new OpenStorageListener(openDirectoryItem, FOLDER_ICON));
                 fileMenu.add(openDirectoryItem);
             }
-            final JMenuItem screenshotItem = new JMenuItem("Take screenshot", CAMERA_ICON);
-            screenshotItem.addActionListener(new ActionListener() {
-
-                private final DateFormat dateFormat = new SimpleDateFormat("dd.MM.YYYY.HHmm.ss");
-                private final File screenshotDirectory = new File(storageDirectory, "Screenshots");
-                private Robot robot;
-
-                @Override
-                public void actionPerformed(ActionEvent actionEvent) {
-                    if (robot == null) {
-                        try {
-                            robot = new Robot();
-                        } catch (AWTException e) {
-                            screenshotItem.setEnabled(false);
-                            screenshotItem.removeActionListener(this);
-                            e.printStackTrace();
-                            new PopupBuilder()
-                                    .withParent(GameWindow.this)
-                                    .withMessage("Could not initialize the facility for taking screenshots.")
-                                    .withTitle("Screenshot Error")
-                                    .withMessageType(JOptionPane.ERROR_MESSAGE)
-                                    .withIcon(CAMERA_ICON)
-                                    .showMessage();
-                            return;
-                        }
-                    }
-                    if (screenshotDirectory.exists() || (screenshotDirectory.mkdirs() && screenshotDirectory.canRead())) {
-                        final Rectangle visibleArea = centerPanel.getGraphicsConfiguration().getBounds().intersection(new Rectangle(
-                                        centerPanel.getLocationOnScreen(),
-                                        new Dimension(centerPanel.getWidth(), centerPanel.getHeight())));
-                        new SwingWorker<Void, Void>() {
-
-                            @Override
-                            protected Void doInBackground() throws Exception {
-                                Thread.sleep(250);
-                                String screenshotFormat = GlobalProperty.SCREENSHOT_FORMAT.get();
-                                if (!ImageIO.write(robot.createScreenCapture(visibleArea),
-                                        screenshotFormat,
-                                        new File(screenshotDirectory, "Screenshot-" + dateFormat.format(new Date()) + '.' + screenshotFormat))) {
-                                    GlobalProperty.SCREENSHOT_FORMAT.setDefault();
-                                }
-                                return null;
-                            }
-
-                            @Override
-                            protected void done() {
-                                try {
-                                    get();
-                                } catch (Exception e) {
-                                    e.printStackTrace();
-                                    new PopupBuilder()
-                                            .withParent(GameWindow.this)
-                                            .withMessage("Could not take a screenshot.")
-                                            .withTitle("Screenshot Error")
-                                            .withMessageType(JOptionPane.WARNING_MESSAGE)
-                                            .withIcon(CAMERA_ICON)
-                                            .showMessage();
-                                }
-                            }
-                        }.execute();
-                    }
-                }
-            });
-            fileMenu.add(screenshotItem);
-            JMenuItem defaultWorldItem = new JMenuItem("Set default world", WORLD_ICON);
-            defaultWorldItem.addActionListener(new ActionListener() {
-
-                @Override
-                public void actionPerformed(ActionEvent actionEvent) {
-                    String input = new PopupBuilder()
-                            .withParent(GameWindow.this)
-                            .withMessage("Please enter a world number.")
-                            .withTitle("Enter World")
-                            .withMessageType(JOptionPane.INFORMATION_MESSAGE)
-                            .withIcon(WORLD_ICON)
-                            .showTextInput();
-                    if (input != null && !input.isEmpty()) {
-                        int world;
-                        try {
-                            world = Integer.parseInt(input);
-                        } catch (NumberFormatException expected) {
-                            new PopupBuilder()
-                                    .withParent(GameWindow.this)
-                                    .withMessage("Please enter a positive integer.")
-                                    .withTitle("Input Error")
-                                    .withMessageType(JOptionPane.INFORMATION_MESSAGE)
-                                    .withIcon(WORLD_ICON)
-                                    .showMessage();
-                            return;
-                        }
-                        if (AppletUtility.isValidWorld(world)) {
-                            GlobalProperty.DEFAULT_WORLD.set(world);
-                        } else {
-                            new PopupBuilder()
-                                    .withParent(GameWindow.this)
-                                    .withMessage("This world is unreachable or does not exist.")
-                                    .withTitle("Input Error")
-                                    .withMessageType(JOptionPane.INFORMATION_MESSAGE)
-                                    .withIcon(WORLD_ICON)
-                                    .showMessage();
-                        }
-                    }
-                }
-            });
+            Robot robot = null;
+            try {
+                robot = new Robot();
+            } catch (AWTException e) {
+                e.printStackTrace();
+                new PopupBuilder()
+                        .withParent(GameWindow.this)
+                        .withMessage("Could not initialize the facility for taking screenshots.")
+                        .withTitle("Screenshot Error")
+                        .withMessageType(JOptionPane.ERROR_MESSAGE)
+                        .withIcon(CAMERA_ICON)
+                        .showMessage();
+            }
+            if (robot != null) {
+                final JMenuItem screenshotItem = new JMenuItem("Take screenshot", CAMERA_ICON);
+                screenshotItem.addActionListener(new TakeScreenshotListener(centerPanel, CAMERA_ICON, robot));
+                fileMenu.add(screenshotItem);
+            }
+            final JMenuItem defaultWorldItem = new JMenuItem("Set default world", WORLD_ICON);
+            defaultWorldItem.addActionListener(new SetDefaultWorldListener(defaultWorldItem, WORLD_ICON));
             fileMenu.add(defaultWorldItem);
         }
         final JCheckBoxMenuItem confirmCloseItem = new JCheckBoxMenuItem("Confirm on close",
@@ -239,7 +135,7 @@ public class GameWindow extends JFrame {
             @Override
             public void windowActivated(WindowEvent windowEvent) {
                 if (!started) {
-                    loadGame(storageDirectory);
+                    loadGame();
                 }
             }
 
@@ -262,8 +158,9 @@ public class GameWindow extends JFrame {
         });
     }
 
-    private void loadGame(File storageDirectory) {
+    private void loadGame() {
         started = true;
+        final File storageDirectory = Application.storageDirectory();
         if (storageDirectory == null) {
             JLabel loadingLabel = new JLabel("Loading...");
             loadingLabel.setForeground(Color.WHITE);
