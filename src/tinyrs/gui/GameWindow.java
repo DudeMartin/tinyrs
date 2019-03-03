@@ -43,6 +43,7 @@ public class GameWindow extends JFrame {
     private static final Icon FOLDER_ICON = loadIcon("folder.png");
     private static final Icon CAMERA_ICON = loadIcon("camera.png");
     private static final Icon WORLD_ICON = loadIcon("world.png");
+    private static final ThreadGroup gameThreads = new ThreadGroup("Game Threads");
     private final CenteredTextPanel centerPanel = new CenteredTextPanel();
     private boolean started;
 
@@ -256,10 +257,16 @@ public class GameWindow extends JFrame {
                 centerPanel.setPreferredSize(new Dimension(765, 503));
                 centerPanel.add(gameApplet);
                 centerPanel.validate();
-                gameApplet.init();
-                gameApplet.start();
                 setPreferredSize(null);
                 pack();
+                new Thread(gameThreads, new Runnable() {
+
+                    @Override
+                    public void run() {
+                        gameApplet.init();
+                        gameApplet.start();
+                    }
+                }, "Game Starter").start();
             }
         }.execute();
     }
