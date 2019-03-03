@@ -2,7 +2,7 @@
 A minimalistic game loader for Old School RuneScape.
 
 ## Features
-- Super portable. One ~30 kB file is all you need! Ideal for people who use
+- Super portable. One ~40 kB file is all you need! Ideal for people who use
   multiple computers.
 - Cross-platform support. Should run on any platform that supports Java with
   Swing.
