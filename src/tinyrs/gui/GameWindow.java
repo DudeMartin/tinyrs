@@ -3,13 +3,8 @@ package tinyrs.gui;
 import java.applet.Applet;
 import java.awt.AWTException;
 import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Component;
 import java.awt.Desktop;
 import java.awt.Dimension;
-import java.awt.FontMetrics;
-import java.awt.Graphics;
-import java.awt.GridBagLayout;
 import java.awt.Robot;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -33,12 +28,10 @@ import javax.swing.Icon;
 import javax.swing.ImageIcon;
 import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JFrame;
-import javax.swing.JLabel;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
-import javax.swing.JPanel;
 import javax.swing.JProgressBar;
 import javax.swing.SwingWorker;
 
@@ -56,7 +49,7 @@ public class GameWindow extends JFrame {
     private static final Icon FOLDER_ICON = loadIcon("folder.png");
     private static final Icon CAMERA_ICON = loadIcon("camera.png");
     private static final Icon WORLD_ICON = loadIcon("world.png");
-    private final JPanel centerPanel = new CenterPanel();
+    private final CenteredTextPanel centerPanel = new CenteredTextPanel();
     private boolean started;
 
     public GameWindow() {
@@ -128,7 +121,7 @@ public class GameWindow extends JFrame {
         setSize(defaultSize);
         setPreferredSize(defaultSize);
         setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
-        centerPanel.setBackground(Color.BLACK);
+        centerPanel.showText("Loading...");
         add(centerPanel);
         addWindowListener(new WindowAdapter() {
 
@@ -162,10 +155,6 @@ public class GameWindow extends JFrame {
         started = true;
         final File storageDirectory = Application.storageDirectory();
         if (storageDirectory == null) {
-            JLabel loadingLabel = new JLabel("Loading...");
-            loadingLabel.setForeground(Color.WHITE);
-            centerPanel.add(loadingLabel);
-            centerPanel.validate();
             startGameClient(defaultGamepackAddress());
         } else {
             File gamepackFile = new File(storageDirectory, "gamepack.jar");
@@ -190,6 +179,7 @@ public class GameWindow extends JFrame {
             progressBar.setStringPainted(true);
             centerPanel.add(progressBar);
             centerPanel.validate();
+            centerPanel.showTextAbove("Downloading...", progressBar, 15);
             centerPanel.repaint();
             new GamepackDownloadWorker(gamepackFile, progressBar).execute();
         }
@@ -245,29 +235,6 @@ public class GameWindow extends JFrame {
             return new URL("http", AppletUtility.getHostForWorld(GlobalProperty.DEFAULT_WORLD.get(int.class)), "/gamepack.jar");
         } catch (MalformedURLException impossible) {
             throw new Error(impossible);
-        }
-    }
-
-    private class CenterPanel extends JPanel {
-
-        private CenterPanel() {
-            super(new GridBagLayout());
-            setBackground(Color.BLACK);
-        }
-
-        @Override
-        public void paintComponent(Graphics g) {
-            super.paintComponent(g);
-            if (getComponentCount() > 0) {
-                Component component = getComponent(0);
-                if (component instanceof JProgressBar) {
-                    FontMetrics metrics = g.getFontMetrics();
-                    g.setColor(Color.WHITE);
-                    g.drawString("Downloading game...",
-                            component.getX() + component.getWidth() / 2 - metrics.stringWidth("Downloading game...") / 2,
-                            component.getY() - 15 + metrics.getHeight() / 2);
-                }
-            }
         }
     }
 
