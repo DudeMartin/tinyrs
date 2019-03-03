@@ -47,6 +47,7 @@ public final class GameWindow extends JFrame {
     private static final Icon FOLDER_ICON = loadIcon("folder.png");
     private static final Icon CAMERA_ICON = loadIcon("camera.png");
     private static final Icon WORLD_ICON = loadIcon("world.png");
+    private static final Icon CONFIRM_ICON = loadIcon("confirm.png");
     private static final ThreadGroup gameThreads = new ThreadGroup("Game Threads");
     private final CenteredTextPanel centerPanel = new CenteredTextPanel();
     private final AtomicBoolean started = new AtomicBoolean();
@@ -84,7 +85,7 @@ public final class GameWindow extends JFrame {
         }
         final JCheckBoxMenuItem confirmCloseItem = new JCheckBoxMenuItem(
                 "Confirm on close",
-                loadIcon("confirm.png"),
+                CONFIRM_ICON,
                 GlobalProperty.CONFIRM_CLOSE.get(boolean.class));
         confirmCloseItem.addItemListener(new ItemListener() {
 
@@ -178,6 +179,7 @@ public final class GameWindow extends JFrame {
                             .withMessage("Are you sure you want to close?")
                             .withTitle("Confirm Close")
                             .withMessageType(JOptionPane.QUESTION_MESSAGE)
+                            .withIcon(CONFIRM_ICON)
                             .showYesNoInput();
                     if (closeOption != JOptionPane.YES_OPTION) {
                         return;
