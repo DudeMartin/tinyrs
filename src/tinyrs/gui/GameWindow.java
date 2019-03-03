@@ -1,8 +1,6 @@
 package tinyrs.gui;
 
 import java.applet.Applet;
-import java.applet.AppletContext;
-import java.applet.AppletStub;
 import java.awt.AWTException;
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -33,7 +31,6 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.jar.JarFile;
 import javax.imageio.ImageIO;
@@ -301,60 +298,25 @@ public class GameWindow extends JFrame {
         }
     }
 
-    private void startGameClient(URL gamepackAddress) {
-        final ClassLoader classLoader = new URLClassLoader(new URL[] { gamepackAddress });
+    private void startGameClient(final URL gamepackAddress) {
         new SwingWorker<Applet, Void>() {
 
             @Override
             protected Applet doInBackground() throws Exception {
-                Applet gameApplet = (Applet) classLoader.loadClass("client").newInstance();
-                AppletStub gameAppletStub = new AppletStub() {
-
-                    private final URL pageAddress =
-                            new URL("http", AppletUtility.getHostForWorld(GlobalProperty.DEFAULT_WORLD.get(int.class)), "/");
-                    private final Map<String, String> parameters =
-                            AppletUtility.parseParameters(new String(StreamUtility.readBytes(pageAddress.openStream())));
-
-                    @Override
-                    public boolean isActive() {
-                        return true;
-                    }
-
-                    @Override
-                    public URL getDocumentBase() {
-                        return pageAddress;
-                    }
-
-                    @Override
-                    public URL getCodeBase() {
-                        return pageAddress;
-                    }
-
-                    @Override
-                    public String getParameter(String name) {
-                        return parameters.get(name);
-                    }
-
-                    @Override
-                    public AppletContext getAppletContext() {
-                        return null;
-                    }
-
-                    @Override
-                    public void appletResize(int width, int height) {
-
-                    }
-                };
-                gameApplet.setStub(gameAppletStub);
+                final ClassLoader classLoader = new URLClassLoader(new URL[] { gamepackAddress });
+                final Applet gameApplet = (Applet) classLoader.loadClass("client").newInstance();
+                final URL codeBase = new URL("http", AppletUtility.getHostForWorld(GlobalProperty.DEFAULT_WORLD.get(int.class)), "/");
+                final String pageSource = new String(StreamUtility.readBytes(codeBase.openStream()), "ISO-8859-1");
+                gameApplet.setStub(AppletUtility.createActiveStub(codeBase, AppletUtility.parseParameters(pageSource)));
                 return gameApplet;
             }
 
             @Override
             protected void done() {
-                Applet gameApplet;
+                final Applet gameApplet;
                 try {
                     gameApplet = get();
-                } catch (Exception e) {
+                } catch (final Exception e) {
                     e.printStackTrace();
                     new PopupBuilder()
                             .withParent(GameWindow.this)

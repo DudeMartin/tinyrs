@@ -1,6 +1,9 @@
 package tinyrs.utils;
 
+import java.applet.AppletContext;
+import java.applet.AppletStub;
 import java.net.InetAddress;
+import java.net.URL;
 import java.net.UnknownHostException;
 import java.util.HashMap;
 import java.util.Map;
@@ -35,5 +38,40 @@ public final class AppletUtility {
             parameters.put(matcher.group(1), matcher.group(2));
         }
         return parameters;
+    }
+
+    public static AppletStub createActiveStub(final URL codeBase, final Map<String, String> parameters) {
+        return new AppletStub() {
+
+            @Override
+            public boolean isActive() {
+                return true;
+            }
+
+            @Override
+            public URL getDocumentBase() {
+                return codeBase;
+            }
+
+            @Override
+            public URL getCodeBase() {
+                return codeBase;
+            }
+
+            @Override
+            public String getParameter(final String name) {
+                return parameters.get(name);
+            }
+
+            @Override
+            public AppletContext getAppletContext() {
+                return null;
+            }
+
+            @Override
+            public void appletResize(final int width, final int height) {
+
+            }
+        };
     }
 }
