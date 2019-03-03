@@ -113,6 +113,7 @@ public class Application {
                 GameWindow window = new GameWindow();
                 window.setTitle("tinyrs");
                 window.setVisible(true);
+                window.pack();
             }
         });
     }
