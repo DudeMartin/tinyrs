@@ -13,16 +13,10 @@ import java.awt.event.ItemListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.net.URLConnection;
-import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.jar.JarFile;
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
@@ -40,6 +34,7 @@ import tinyrs.GlobalProperty;
 import tinyrs.gui.menu.OpenStorageListener;
 import tinyrs.gui.menu.SetDefaultWorldListener;
 import tinyrs.gui.menu.TakeScreenshotListener;
+import tinyrs.gui.utils.GamepackDownloadWorker;
 import tinyrs.utils.AppletUtility;
 import tinyrs.utils.StreamUtility;
 import tinyrs.utils.VersionUtility;
@@ -155,9 +150,14 @@ public class GameWindow extends JFrame {
         started = true;
         final File storageDirectory = Application.storageDirectory();
         if (storageDirectory == null) {
-            startGameClient(defaultGamepackAddress());
+            try {
+                startGameClient(
+                        new URL("http", AppletUtility.getHostForWorld(GlobalProperty.DEFAULT_WORLD.get(int.class)), "/gamepack.jar"));
+            } catch (MalformedURLException impossible) {
+                throw new Error(impossible);
+            }
         } else {
-            File gamepackFile = new File(storageDirectory, "gamepack.jar");
+            final File gamepackFile = new File(storageDirectory, "gamepack.jar");
             if (gamepackFile.exists()) {
                 boolean latestRevision;
                 try {
@@ -181,7 +181,29 @@ public class GameWindow extends JFrame {
             centerPanel.validate();
             centerPanel.showTextAbove("Downloading...", progressBar, 15);
             centerPanel.repaint();
-            new GamepackDownloadWorker(gamepackFile, progressBar).execute();
+            new GamepackDownloadWorker(gamepackFile, progressBar) {
+
+                @Override
+                protected void done() {
+                    try {
+                        get();
+                    } catch (final Exception e) {
+                        e.printStackTrace();
+                        new PopupBuilder()
+                                .withParent(GameWindow.this)
+                                .withMessage("Could not download the game client.")
+                                .withTitle("Download Error")
+                                .withMessageType(JOptionPane.ERROR_MESSAGE)
+                                .showMessage();
+                        return;
+                    }
+                    try {
+                        startGameClient(gamepackFile.toURI().toURL());
+                    } catch (MalformedURLException impossible) {
+                        throw new Error(impossible);
+                    }
+                }
+            }.execute();
         }
     }
 
@@ -228,84 +250,5 @@ public class GameWindow extends JFrame {
 
     private static ImageIcon loadIcon(String name) {
         return new ImageIcon(GameWindow.class.getResource("/resources/" + name));
-    }
-
-    private static URL defaultGamepackAddress() {
-        try {
-            return new URL("http", AppletUtility.getHostForWorld(GlobalProperty.DEFAULT_WORLD.get(int.class)), "/gamepack.jar");
-        } catch (MalformedURLException impossible) {
-            throw new Error(impossible);
-        }
-    }
-
-    private class GamepackDownloadWorker extends SwingWorker<Void, Integer> {
-
-        private final File destinationFile;
-        private final JProgressBar progressBar;
-
-        private GamepackDownloadWorker(final File destinationFile, final JProgressBar progressBar) {
-            this.destinationFile = destinationFile;
-            this.progressBar = progressBar;
-        }
-
-        @Override
-        protected Void doInBackground() throws Exception {
-            final URLConnection gamepackConnection = defaultGamepackAddress().openConnection();
-            final int gamepackSize = gamepackConnection.getContentLength();
-            publish(gamepackSize == -1 ? Integer.MIN_VALUE : 0);
-            final InputStream gamepackStream = gamepackConnection.getInputStream();
-            final byte[] gamepackBytes;
-            if (gamepackSize == -1) {
-                gamepackBytes = StreamUtility.readBytes(gamepackStream);
-            } else {
-                final AtomicInteger totalBytesRead = new AtomicInteger();
-                gamepackBytes = StreamUtility.readBytes(gamepackStream, new StreamUtility.ProgressListener() {
-
-                    @Override
-                    public void onBytesRead(final int amount) {
-                        publish(100 * totalBytesRead.addAndGet(amount) / gamepackSize);
-                    }
-                });
-            }
-            final OutputStream fileStream = new FileOutputStream(destinationFile);
-            try {
-                fileStream.write(gamepackBytes);
-            } finally {
-                fileStream.close();
-            }
-            return null;
-        }
-
-        @Override
-        protected void process(final List<Integer> chunks) {
-            for (final Integer percentage : chunks) {
-                if (percentage == Integer.MIN_VALUE) {
-                    progressBar.setIndeterminate(true);
-                    return;
-                }
-                progressBar.setValue(percentage);
-            }
-        }
-
-        @Override
-        protected void done() {
-            try {
-                get();
-            } catch (final Exception e) {
-                e.printStackTrace();
-                new PopupBuilder()
-                        .withParent(GameWindow.this)
-                        .withMessage("Could not download the game client.")
-                        .withTitle("Download Error")
-                        .withMessageType(JOptionPane.ERROR_MESSAGE)
-                        .showMessage();
-                return;
-            }
-            try {
-                startGameClient(destinationFile.toURI().toURL());
-            } catch (MalformedURLException impossible) {
-                throw new Error(impossible);
-            }
-        }
     }
 }
