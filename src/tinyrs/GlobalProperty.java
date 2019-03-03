@@ -75,15 +75,11 @@ public enum GlobalProperty {
                 if (equalsIndex == -1) {
                     continue;
                 }
-                final String propertyName = line.substring(0, equalsIndex);
-                final GlobalProperty property;
                 try {
-                    property = valueOf(propertyName);
+                    valueOf(line.substring(0, equalsIndex)).set(convertFromString(line.substring(equalsIndex + 1)));
                 } catch (final IllegalArgumentException swallowed) {
-                    unrecognizedProperties.add(propertyName);
-                    continue;
+                    unrecognizedProperties.add(line);
                 }
-                property.set(convertFromString(line.substring(equalsIndex + 1)));
             }
         } finally {
             scanner.close();

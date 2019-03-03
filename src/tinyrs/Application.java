@@ -126,7 +126,7 @@ public class Application {
         final int worldNumber;
         try {
             worldNumber = Integer.parseInt(world);
-        } catch (NumberFormatException expected) {
+        } catch (final NumberFormatException expected) {
             return INVALID_WORLD;
         }
         if (!AppletUtility.isValidWorld(worldNumber)) {
