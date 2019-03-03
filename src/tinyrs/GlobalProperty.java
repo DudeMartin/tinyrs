@@ -12,7 +12,12 @@ public enum GlobalProperty {
     SCREENSHOT_FORMAT("png"),
     DEFAULT_WORLD(2),
     CONFIRM_CLOSE(false),
-    ALWAYS_ON_TOP(false);
+    ALWAYS_ON_TOP(false),
+    REMEMBER_WINDOW_BOUNDS(false),
+    LAST_WINDOW_X(0),
+    LAST_WINDOW_Y(0),
+    LAST_WINDOW_WIDTH(765),
+    LAST_WINDOW_HEIGHT(503);
 
     private final Object defaultValue;
     private volatile Object value;

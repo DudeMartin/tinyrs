@@ -5,9 +5,12 @@ import java.awt.AWTException;
 import java.awt.BorderLayout;
 import java.awt.Desktop;
 import java.awt.Dimension;
+import java.awt.Point;
 import java.awt.Robot;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.awt.event.WindowAdapter;
@@ -96,6 +99,7 @@ public final class GameWindow extends JFrame {
 
             @Override
             public void actionPerformed(final ActionEvent e) {
+                centerPanel.setPreferredSize(new Dimension(765, 503));
                 pack();
             }
         });
@@ -113,11 +117,49 @@ public final class GameWindow extends JFrame {
             }
         });
         fileMenu.add(alwaysOnTopItem);
+        final boolean rememberBounds = GlobalProperty.REMEMBER_WINDOW_BOUNDS.get(boolean.class);
+        final JCheckBoxMenuItem rememberBoundsItem = new JCheckBoxMenuItem(
+                "Remember window bounds",
+                loadIcon("bounds.png"),
+                rememberBounds);
+        rememberBoundsItem.setToolTipText("Remember the window position and size after closing it.");
+        rememberBoundsItem.addItemListener(new ItemListener() {
+
+            @Override
+            public void itemStateChanged(final ItemEvent e) {
+                GlobalProperty.REMEMBER_WINDOW_BOUNDS.set(rememberBoundsItem.isSelected());
+            }
+        });
+        fileMenu.add(rememberBoundsItem);
         menuBar.add(fileMenu);
         setJMenuBar(menuBar);
         setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
-        centerPanel.setPreferredSize(new Dimension(765, 503));
+        if (rememberBounds) {
+            setLocation(GlobalProperty.LAST_WINDOW_X.get(int.class), GlobalProperty.LAST_WINDOW_Y.get(int.class));
+            centerPanel.setPreferredSize(new Dimension(
+                    GlobalProperty.LAST_WINDOW_WIDTH.get(int.class),
+                    GlobalProperty.LAST_WINDOW_HEIGHT.get(int.class)));
+        } else {
+            centerPanel.setPreferredSize(new Dimension(765, 503));
+        }
         centerPanel.showText("Loading...");
+        centerPanel.addComponentListener(new ComponentAdapter() {
+
+            @Override
+            public void componentResized(final ComponentEvent e) {
+                GlobalProperty.LAST_WINDOW_WIDTH.set(centerPanel.getWidth());
+                GlobalProperty.LAST_WINDOW_HEIGHT.set(centerPanel.getHeight());
+            }
+        });
+        addComponentListener(new ComponentAdapter() {
+
+            @Override
+            public void componentMoved(final ComponentEvent e) {
+                final Point screenPosition = getLocationOnScreen();
+                GlobalProperty.LAST_WINDOW_X.set(screenPosition.x);
+                GlobalProperty.LAST_WINDOW_Y.set(screenPosition.y);
+            }
+        });
         add(centerPanel);
         addWindowListener(new WindowAdapter() {
 
