@@ -299,7 +299,7 @@ class GameWindow extends JFrame {
                 AppletStub gameAppletStub = new AppletStub() {
 
                     private final URL pageAddress =
-                            new URL("http://oldschool" + GlobalProperty.DEFAULT_WORLD.get() + ".runescape.com");
+                            new URL("http", AppletUtility.getHostForWorld(GlobalProperty.DEFAULT_WORLD.get(int.class)), "/");
                     private final Map<String, String> parameters =
                             AppletUtility.parseParameters(new String(StreamUtility.readBytes(pageAddress.openStream())));
 
@@ -376,7 +376,7 @@ class GameWindow extends JFrame {
 
     private static URL defaultGamepackAddress() {
         try {
-            return new URL("http://oldschool" + GlobalProperty.DEFAULT_WORLD.get() + ".runescape.com/gamepack.jar");
+            return new URL("http", AppletUtility.getHostForWorld(GlobalProperty.DEFAULT_WORLD.get(int.class)), "/gamepack.jar");
         } catch (MalformedURLException impossible) {
             throw new Error(impossible);
         }

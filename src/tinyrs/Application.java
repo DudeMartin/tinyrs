@@ -21,7 +21,7 @@ public class Application {
         for (String argument : arguments) {
             if (argument.startsWith("defaultWorld=")) {
                 defaultWorld = argument.substring(13);
-                if (!AppletUtility.isValidWorld(Integer.parseInt(defaultWorld))) {
+                if (!AppletUtility.isValidWorld(defaultWorld)) {
                     System.err.println("Invalid game world specified. Ignoring argument...");
                     defaultWorld = null;
                 }
