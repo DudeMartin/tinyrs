@@ -14,17 +14,17 @@ import tinyrs.utils.AppletUtility;
 
 public class Application {
 
+    private static final int INVALID_WORLD = -1;
     public static File storageDirectory;
 
     public static void main(String[] arguments) {
-        String defaultWorld = null;
+        int defaultWorld = INVALID_WORLD;
         File storageDirectory = null;
         for (String argument : arguments) {
             if (argument.startsWith("defaultWorld=")) {
-                defaultWorld = argument.substring(13);
-                if (!AppletUtility.isValidWorld(defaultWorld)) {
-                    System.err.println("Invalid game world specified. Ignoring argument...");
-                    defaultWorld = null;
+                defaultWorld = parseValidWorld(argument.substring(13));
+                if (defaultWorld == INVALID_WORLD) {
+                    System.err.println("The specified default world is invalid. Ignoring argument...");
                 }
             } else if (argument.startsWith("storageDirectory=")) {
                 File specifiedDirectory = new File(argument.substring(17));
@@ -86,7 +86,7 @@ public class Application {
                         .showMessage();
             }
         }
-        if (defaultWorld != null) {
+        if (defaultWorld != INVALID_WORLD) {
             GlobalProperty.DEFAULT_WORLD.set(defaultWorld);
         } else if (loadedProperties && !AppletUtility.isValidWorld(GlobalProperty.DEFAULT_WORLD.get(int.class))) {
             GlobalProperty.DEFAULT_WORLD.setDefault();
@@ -119,5 +119,18 @@ public class Application {
                 }
             }
         }));
+    }
+
+    private static int parseValidWorld(String world) {
+        int worldNumber;
+        try {
+            worldNumber = Integer.parseInt(world);
+        } catch (NumberFormatException expected) {
+            return INVALID_WORLD;
+        }
+        if (!AppletUtility.isValidWorld(worldNumber)) {
+            return INVALID_WORLD;
+        }
+        return worldNumber;
     }
 }

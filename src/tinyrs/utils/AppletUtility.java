@@ -28,14 +28,6 @@ public final class AppletUtility {
         }
     }
 
-    public static boolean isValidWorld(final String world) {
-        try {
-            return isValidWorld(Integer.parseInt(world));
-        } catch (final NumberFormatException expected) {
-            return false;
-        }
-    }
-
     public static Map<String, String> parseParameters(final String pageSource) {
         final Map<String, String> parameters = new HashMap<String, String>();
         final Matcher matcher = PARAMETER_PATTERN.matcher(pageSource);

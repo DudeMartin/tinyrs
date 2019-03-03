@@ -173,7 +173,7 @@ public class GameWindow extends JFrame {
                             return;
                         }
                         if (AppletUtility.isValidWorld(world)) {
-                            GlobalProperty.DEFAULT_WORLD.set(input);
+                            GlobalProperty.DEFAULT_WORLD.set(world);
                         } else {
                             new PopupBuilder()
                                     .withParent(GameWindow.this)
