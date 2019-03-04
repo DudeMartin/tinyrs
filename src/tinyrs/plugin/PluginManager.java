@@ -111,11 +111,8 @@ public final class PluginManager {
 
             @Override
             public void run() {
-                final JMenuItem pluginMenuItem = pluginMap.get(plugin);
-                pluginMenu.add(pluginMenuItem);
-                if (pluginMenu.getMenuComponentCount() > 0) {
-                    pluginMenu.setVisible(true);
-                }
+                pluginMenu.add(pluginMap.get(plugin));
+                pluginMenu.setVisible(true);
                 pluginMenu.validate();
                 pluginMenu.repaint();
             }
@@ -127,8 +124,7 @@ public final class PluginManager {
 
             @Override
             public void run() {
-                final JMenuItem pluginMenuItem = pluginMap.remove(plugin);
-                pluginMenu.remove(pluginMenuItem);
+                pluginMenu.remove(pluginMap.remove(plugin));
                 if (pluginMenu.getMenuComponentCount() == 0) {
                     pluginMenu.setVisible(false);
                 }
