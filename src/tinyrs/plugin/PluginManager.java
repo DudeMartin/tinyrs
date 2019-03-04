@@ -5,8 +5,8 @@ import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.jar.JarFile;
 import java.util.jar.Manifest;
 import javax.swing.JMenu;
@@ -16,8 +16,8 @@ import javax.swing.SwingUtilities;
 public final class PluginManager {
 
     private static final String JAR_URL_FORMAT = "jar:file:%s!/";
+    private final Map<Plugin, JMenuItem> pluginMap = new ConcurrentHashMap<Plugin, JMenuItem>();
     private final JMenu pluginMenu = new JMenu("Plugins");
-    private final Map<Plugin, JMenuItem> pluginMap = new HashMap<Plugin, JMenuItem>();
 
     public PluginManager() {
         pluginMenu.setVisible(false);
@@ -68,7 +68,6 @@ public final class PluginManager {
                         throw new NullPointerException();
                     }
                     pluginMap.put(plugin, pluginMenuItem);
-                    addPlugin(plugin);
                 }
             });
         } catch (final Exception e) {
@@ -84,7 +83,7 @@ public final class PluginManager {
                 e.printStackTrace();
                 continue;
             }
-            addPlugin(plugin);
+            addPluginToMenu(plugin);
         }
     }
 
@@ -104,8 +103,8 @@ public final class PluginManager {
         return pluginMenu;
     }
 
-    private void addPlugin(final Plugin plugin) {
-        executeAsynchronouslyOnEventDispatchThread(new Runnable() {
+    private void addPluginToMenu(final Plugin plugin) {
+        executeOnEventDispatchThread(new Runnable() {
 
             @Override
             public void run() {
@@ -116,29 +115,27 @@ public final class PluginManager {
                 }
                 pluginMenu.validate();
                 pluginMenu.repaint();
-                pluginMap.remove(plugin);
             }
         });
     }
 
     private void removePlugin(final Plugin plugin) {
-        executeAsynchronouslyOnEventDispatchThread(new Runnable() {
+        executeOnEventDispatchThread(new Runnable() {
 
             @Override
             public void run() {
-                final JMenuItem pluginMenuItem = pluginMap.get(plugin);
+                final JMenuItem pluginMenuItem = pluginMap.remove(plugin);
                 pluginMenu.remove(pluginMenuItem);
                 if (pluginMenu.getMenuComponentCount() == 0) {
                     pluginMenu.setVisible(false);
                 }
                 pluginMenu.validate();
                 pluginMenu.repaint();
-                pluginMap.remove(plugin);
             }
         });
     }
 
-    private static void executeAsynchronouslyOnEventDispatchThread(final Runnable task) {
+    private static void executeOnEventDispatchThread(final Runnable task) {
         if (SwingUtilities.isEventDispatchThread()) {
             task.run();
         } else {
