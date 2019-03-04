@@ -20,6 +20,7 @@ public final class Application {
     private static File storageDirectory;
 
     public static void main(final String[] arguments) {
+        JPopupMenu.setDefaultLightWeightPopupEnabled(false);
         final PluginManager pluginManager = new PluginManager();
         for (final String argument : arguments) {
             if (argument.startsWith("storageDirectory=")) {
@@ -115,7 +116,6 @@ public final class Application {
 
             @Override
             public void run() {
-                JPopupMenu.setDefaultLightWeightPopupEnabled(false);
                 GameWindow window = new GameWindow(pluginManager);
                 window.setTitle("tinyrs");
                 window.setVisible(true);
