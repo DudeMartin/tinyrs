@@ -3,6 +3,7 @@ package tinyrs.plugin;
 import java.applet.Applet;
 import java.io.IOException;
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Modifier;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.Map;
@@ -40,7 +41,9 @@ public final class PluginManager {
         } catch (final ClassNotFoundException e) {
             throw new PluginArchiveException("The plugin class specified in the manifest file could not be found.", e);
         }
-        if (!Plugin.class.isAssignableFrom(specifiedPluginClass)) {
+        if (Modifier.isAbstract(specifiedPluginClass.getModifiers())) {
+            throw new PluginArchiveException("The plugin class specified in the manifest file is abstract.");
+        } else if (!Plugin.class.isAssignableFrom(specifiedPluginClass)) {
             throw new PluginArchiveException(
                     "The plugin class specified in the manifest file is not a subclass of " + Plugin.class.getName() + '.');
         }
