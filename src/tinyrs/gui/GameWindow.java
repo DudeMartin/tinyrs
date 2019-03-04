@@ -37,6 +37,7 @@ import tinyrs.gui.menu.OpenStorageListener;
 import tinyrs.gui.menu.SetDefaultWorldListener;
 import tinyrs.gui.menu.TakeScreenshotListener;
 import tinyrs.gui.utils.GamepackDownloadWorker;
+import tinyrs.plugin.PluginManager;
 import tinyrs.utils.AppletUtility;
 import tinyrs.utils.StreamUtility;
 import tinyrs.utils.VersionUtility;
@@ -51,7 +52,7 @@ public final class GameWindow extends JFrame {
     private final CenteredTextPanel centerPanel = new CenteredTextPanel();
     private final AtomicBoolean started = new AtomicBoolean();
 
-    public GameWindow() {
+    public GameWindow(final PluginManager pluginManager) {
         final JMenuBar menuBar = new JMenuBar();
         final JMenu fileMenu = new JMenu("File");
         if (Application.isStorageDirectoryAvailable()) {
@@ -134,6 +135,7 @@ public final class GameWindow extends JFrame {
         });
         fileMenu.add(rememberBoundsItem);
         menuBar.add(fileMenu);
+        menuBar.add(pluginManager.getPluginMenu());
         setJMenuBar(menuBar);
         setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
         if (rememberBounds) {
@@ -170,7 +172,7 @@ public final class GameWindow extends JFrame {
             @Override
             public void windowActivated(final WindowEvent e) {
                 if (started.compareAndSet(false, true)) {
-                    loadGame();
+                    loadGame(pluginManager);
                 }
             }
 
@@ -188,7 +190,11 @@ public final class GameWindow extends JFrame {
                         return;
                     }
                 }
-                System.exit(0);
+                try {
+                    pluginManager.stopPlugins();
+                } finally {
+                    System.exit(0);
+                }
             }
         });
     }
@@ -199,7 +205,7 @@ public final class GameWindow extends JFrame {
         centerPanel.showText(message);
     }
 
-    private void loadGame() {
+    private void loadGame(final PluginManager pluginManager) {
         if (Application.isStorageDirectoryAvailable()) {
             final File gamepackFile = new File(Application.storageDirectory(), "gamepack.jar");
             if (gamepackFile.exists()) {
@@ -221,21 +227,22 @@ public final class GameWindow extends JFrame {
                         }
                         if (latestRevision) {
                             try {
-                                startGame(gamepackFile.toURI().toURL());
+                                startGame(pluginManager, gamepackFile.toURI().toURL());
                             } catch (final MalformedURLException impossible) {
                                 throw new Error(impossible);
                             }
                         } else {
-                            downloadThenStartGame(gamepackFile);
+                            downloadThenStartGame(pluginManager, gamepackFile);
                         }
                     }
                 }.execute();
             } else {
-                downloadThenStartGame(gamepackFile);
+                downloadThenStartGame(pluginManager, gamepackFile);
             }
         } else {
             try {
                 startGame(
+                        pluginManager,
                         new URL("http", AppletUtility.getHostForWorld(GlobalProperty.DEFAULT_WORLD.get(int.class)), "/gamepack.jar"));
             } catch (final MalformedURLException impossible) {
                 throw new Error(impossible);
@@ -243,7 +250,7 @@ public final class GameWindow extends JFrame {
         }
     }
 
-    private void downloadThenStartGame(final File gamepackFile) {
+    private void downloadThenStartGame(final PluginManager pluginManager, final File gamepackFile) {
         final JProgressBar progressBar = new JProgressBar();
         progressBar.setStringPainted(true);
         centerPanel.add(progressBar);
@@ -261,7 +268,7 @@ public final class GameWindow extends JFrame {
                     return;
                 }
                 try {
-                    startGame(gamepackFile.toURI().toURL());
+                    startGame(pluginManager, gamepackFile.toURI().toURL());
                 } catch (final MalformedURLException impossible) {
                     throw new Error(impossible);
                 }
@@ -269,7 +276,7 @@ public final class GameWindow extends JFrame {
         }.execute();
     }
 
-    private void startGame(final URL gamepackAddress) {
+    private void startGame(final PluginManager pluginManager, final URL gamepackAddress) {
         new SwingWorker<Applet, Void>() {
 
             @Override
@@ -303,6 +310,7 @@ public final class GameWindow extends JFrame {
                     public void run() {
                         gameApplet.init();
                         gameApplet.start();
+                        pluginManager.startPlugins(gameApplet);
                     }
                 }, "Game Starter").start();
             }

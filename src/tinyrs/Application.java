@@ -5,11 +5,13 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.jar.JarFile;
 import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
 
 import tinyrs.gui.GameWindow;
 import tinyrs.gui.PopupBuilder;
+import tinyrs.plugin.PluginManager;
 import tinyrs.utils.AppletUtility;
 
 public final class Application {
@@ -18,6 +20,7 @@ public final class Application {
     private static File storageDirectory;
 
     public static void main(final String[] arguments) {
+        final PluginManager pluginManager = new PluginManager();
         for (final String argument : arguments) {
             if (argument.startsWith("storageDirectory=")) {
                 final File specifiedDirectory = new File(argument.substring(17));
@@ -54,6 +57,14 @@ public final class Application {
                     System.err.println("The specified default world is invalid. Ignoring argument...");
                 } else {
                     GlobalProperty.DEFAULT_WORLD.set(defaultWorld);
+                }
+            } else if (argument.startsWith("pluginArchive=")) {
+                final String pluginPath = argument.substring(14);
+                try {
+                    pluginManager.loadPlugin(new JarFile(pluginPath));
+                } catch (final Exception e) {
+                    System.err.println("Failed to load the plugin at: " + pluginPath + ". Ignoring...");
+                    e.printStackTrace();
                 }
             }
         }
@@ -105,7 +116,7 @@ public final class Application {
             @Override
             public void run() {
                 JPopupMenu.setDefaultLightWeightPopupEnabled(false);
-                GameWindow window = new GameWindow();
+                GameWindow window = new GameWindow(pluginManager);
                 window.setTitle("tinyrs");
                 window.setVisible(true);
                 window.pack();
