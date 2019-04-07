@@ -3,9 +3,10 @@ package tinyrs;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintWriter;
-import java.util.ArrayList;
-import java.util.Collection;
+import java.util.Collections;
+import java.util.EnumSet;
 import java.util.Scanner;
+import java.util.Set;
 
 public enum GlobalProperty {
 
@@ -19,6 +20,7 @@ public enum GlobalProperty {
     LAST_WINDOW_WIDTH(765),
     LAST_WINDOW_HEIGHT(503);
 
+    private static final Set<GlobalProperty> PROPERTIES = Collections.unmodifiableSet(EnumSet.allOf(GlobalProperty.class));
     private final Object defaultValue;
     private volatile Object value;
 
@@ -27,6 +29,7 @@ public enum GlobalProperty {
         value = defaultValue;
     }
 
+    @SuppressWarnings("unchecked")
     public <T> T get(final Class<T> type) {
         assertCompatibleType(type);
         return (T) value;
@@ -36,6 +39,7 @@ public enum GlobalProperty {
         return get(Object.class).toString();
     }
 
+    @SuppressWarnings("unchecked")
     public <T> T getDefault(final Class<T> type) {
         assertCompatibleType(type);
         return (T) defaultValue;
@@ -56,23 +60,19 @@ public enum GlobalProperty {
 
     private void assertCompatibleType(final Class<?> type) {
         final Class<?> thisType = defaultValue.getClass();
-        boolean compatible = type == Object.class || type.isAssignableFrom(thisType);
-        if (thisType == Integer.class) {
-            compatible |= type == int.class;
-        } else if (thisType == Boolean.class) {
-            compatible |= type == boolean.class;
-        }
-        if (!compatible) {
+        if (!(type == Object.class
+                || (thisType == Integer.class && type == int.class)
+                || (thisType == Boolean.class && type == boolean.class)
+                || type.isAssignableFrom(thisType))) {
             throw new IllegalArgumentException("The provided type is incompatible with this property's.");
         }
     }
 
-    public static Collection<String> readAll(final InputStream inputStream) {
-        final Collection<String> unrecognizedProperties = new ArrayList<String>();
+    public static void readAll(final InputStream inputStream) {
         final Scanner scanner = new Scanner(inputStream);
         try {
             while (scanner.hasNextLine()) {
-                final String line = scanner.nextLine();
+                final String line = scanner.nextLine().trim();
                 if (line.startsWith("#")) {
                     continue;
                 }
@@ -81,27 +81,35 @@ public enum GlobalProperty {
                     continue;
                 }
                 try {
-                    valueOf(line.substring(0, equalsIndex)).set(convertFromString(line.substring(equalsIndex + 1)));
-                } catch (final IllegalArgumentException swallowed) {
-                    unrecognizedProperties.add(line);
+                    getProperty(line.substring(0, equalsIndex)).set(convertFromString(line.substring(equalsIndex + 1)));
+                } catch (final IllegalArgumentException e) {
+                    e.printStackTrace();
                 }
             }
         } finally {
             scanner.close();
         }
-        return unrecognizedProperties;
     }
 
     public static void writeAll(final OutputStream outputStream) {
         final PrintWriter printWriter = new PrintWriter(outputStream);
         try {
-            for (final GlobalProperty property : values()) {
+            for (final GlobalProperty property : PROPERTIES) {
                 printWriter.println(property.toString() + '=' + property.get());
             }
             printWriter.println();
         } finally {
             printWriter.close();
         }
+    }
+
+    private static GlobalProperty getProperty(final String name) {
+        for (final GlobalProperty property : PROPERTIES) {
+            if (property.name().equalsIgnoreCase(name)) {
+                return property;
+            }
+        }
+        throw new IllegalArgumentException(String.format("There is no global property with the name \"%s\".", name));
     }
 
     private static Object convertFromString(final String value) {
