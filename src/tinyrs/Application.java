@@ -116,7 +116,7 @@ public final class Application {
 
             @Override
             public void run() {
-                GameWindow window = new GameWindow(pluginManager);
+                final GameWindow window = new GameWindow(pluginManager);
                 window.setTitle("tinyrs");
                 window.setVisible(true);
                 window.pack();

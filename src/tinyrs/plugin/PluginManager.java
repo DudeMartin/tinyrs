@@ -2,8 +2,6 @@ package tinyrs.plugin;
 
 import java.applet.Applet;
 import java.io.IOException;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Modifier;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.Map;
@@ -35,29 +33,18 @@ public final class PluginManager {
         }
         final ClassLoader classLoader = new URLClassLoader(
                 new URL[] { new URL(String.format(JAR_URL_FORMAT, pluginArchive.getName())) });
-        final Class<?> specifiedPluginClass;
-        try {
-            specifiedPluginClass = classLoader.loadClass(pluginClassName);
-        } catch (final ClassNotFoundException e) {
-            throw new PluginArchiveException("The plugin class specified in the manifest file could not be found.", e);
-        }
-        if (Modifier.isAbstract(specifiedPluginClass.getModifiers())) {
-            throw new PluginArchiveException("The plugin class specified in the manifest file is abstract.");
-        } else if (!Plugin.class.isAssignableFrom(specifiedPluginClass)) {
-            throw new PluginArchiveException(
-                    "The plugin class specified in the manifest file is not a subclass of " + Plugin.class.getName() + '.');
-        }
-        final Class<? extends Plugin> pluginClass = specifiedPluginClass.asSubclass(Plugin.class);
-        final Constructor<? extends Plugin> nullaryPluginConstructor;
-        try {
-            nullaryPluginConstructor = pluginClass.getDeclaredConstructor();
-        } catch (final NoSuchMethodException e) {
-            throw new PluginArchiveException(
-                    "The plugin class specified in the manifest file is missing a nullary constructor.", e);
-        }
         final Plugin plugin;
         try {
-            plugin = nullaryPluginConstructor.newInstance();
+            plugin = classLoader.loadClass(pluginClassName).asSubclass(Plugin.class).newInstance();
+        } catch (final ClassNotFoundException e) {
+            throw new PluginArchiveException("The plugin class could not be found.", e);
+        } catch (final ClassCastException e) {
+            throw new PluginArchiveException(
+                    "The plugin class is not a subclass of " + Plugin.class.getName() + '.', e);
+        } catch (final IllegalAccessException e) {
+            throw new PluginArchiveException("The plugin class or its nullary constructor is not accessible.", e);
+        } catch (final InstantiationException e) {
+            throw new PluginArchiveException("The plugin class is abstract or is missing a nullary constructor.", e);
         } catch (final Exception e) {
             throw new PluginException("Failed to create an instance of the plugin.", e);
         }
