@@ -55,6 +55,7 @@ public final class GameWindow extends JFrame {
     public GameWindow(final PluginManager pluginManager) {
         final JMenuBar menuBar = new JMenuBar();
         final JMenu fileMenu = new JMenu("File");
+        final boolean rememberBounds = GlobalProperty.REMEMBER_WINDOW_BOUNDS.get(boolean.class);
         if (Application.isStorageDirectoryAvailable()) {
             if (Desktop.isDesktopSupported()) {
                 final JMenuItem storageItem = new JMenuItem("Open storage directory", FOLDER_ICON);
@@ -82,6 +83,19 @@ public final class GameWindow extends JFrame {
             final JMenuItem defaultWorldItem = new JMenuItem("Set default world", WORLD_ICON);
             defaultWorldItem.addActionListener(new SetDefaultWorldListener(defaultWorldItem, WORLD_ICON));
             fileMenu.add(defaultWorldItem);
+            final JCheckBoxMenuItem rememberBoundsItem = new JCheckBoxMenuItem(
+                    "Remember window bounds",
+                    loadIcon("bounds.png"),
+                    rememberBounds);
+            rememberBoundsItem.setToolTipText("Remember the window position and size after closing it.");
+            rememberBoundsItem.addItemListener(new ItemListener() {
+
+                @Override
+                public void itemStateChanged(final ItemEvent e) {
+                    GlobalProperty.REMEMBER_WINDOW_BOUNDS.set(rememberBoundsItem.isSelected());
+                }
+            });
+            fileMenu.add(rememberBoundsItem);
         }
         final JCheckBoxMenuItem confirmCloseItem = new JCheckBoxMenuItem(
                 "Confirm on close",
@@ -120,20 +134,6 @@ public final class GameWindow extends JFrame {
             }
         });
         fileMenu.add(alwaysOnTopItem);
-        final boolean rememberBounds = GlobalProperty.REMEMBER_WINDOW_BOUNDS.get(boolean.class);
-        final JCheckBoxMenuItem rememberBoundsItem = new JCheckBoxMenuItem(
-                "Remember window bounds",
-                loadIcon("bounds.png"),
-                rememberBounds);
-        rememberBoundsItem.setToolTipText("Remember the window position and size after closing it.");
-        rememberBoundsItem.addItemListener(new ItemListener() {
-
-            @Override
-            public void itemStateChanged(final ItemEvent e) {
-                GlobalProperty.REMEMBER_WINDOW_BOUNDS.set(rememberBoundsItem.isSelected());
-            }
-        });
-        fileMenu.add(rememberBoundsItem);
         menuBar.add(fileMenu);
         menuBar.add(pluginManager.getPluginMenu());
         setJMenuBar(menuBar);

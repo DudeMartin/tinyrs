@@ -15,11 +15,18 @@ import javax.swing.SwingUtilities;
 public final class PluginManager {
 
     private static final String JAR_URL_FORMAT = "jar:file:%s!/";
-    private final JMenu pluginMenu = new JMenu("Plugins");
     private final Set<Plugin> plugins = Collections.newSetFromMap(new ConcurrentHashMap<Plugin, Boolean>());
+    private JMenu pluginMenu;
 
     public PluginManager() {
-        pluginMenu.setVisible(false);
+        SwingUtilities.invokeLater(new Runnable() {
+
+            @Override
+            public void run() {
+                pluginMenu = new JMenu("Plugins");
+                pluginMenu.setVisible(false);
+            }
+        });
     }
 
     public void loadPlugin(final JarFile pluginArchive) throws IOException, PluginException {

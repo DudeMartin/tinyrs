@@ -1,6 +1,5 @@
 package tinyrs.utils;
 
-import java.io.DataOutput;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -11,7 +10,7 @@ import java.util.jar.JarFile;
 
 public final class VersionUtility {
 
-    private static final byte[] REVISION_NUMBER_PATTERN = new byte[] { 17, 2, -3, 17, 1, -9, 17 };
+    private static final byte[] REVISION_NUMBER_PATTERN = { 17, 2, -3, 17, 1, -9, 17 };
 
     private VersionUtility() {
 
@@ -37,9 +36,10 @@ public final class VersionUtility {
         final Socket socket = new Socket();
         try {
             socket.connect(new InetSocketAddress(AppletUtility.getHostForWorld(2), 43594));
-            final DataOutput socketStream = new DataOutputStream(socket.getOutputStream());
+            final DataOutputStream socketStream = new DataOutputStream(socket.getOutputStream());
             socketStream.write(15);
             socketStream.writeInt(revision);
+            socketStream.flush();
             return socket.getInputStream().read() == 0;
         } finally {
             socket.close();

@@ -21,7 +21,7 @@ import tinyrs.gui.PopupBuilder;
 
 public final class TakeScreenshotListener implements ActionListener {
 
-    private static final DateFormat DATE_FORMAT = new SimpleDateFormat("YYYYMMddHHmmss");
+    private static final DateFormat DATE_FORMAT = new SimpleDateFormat("yyyyMMddHHmmss");
     private final Component target;
     private final Icon popupIcon;
     private final Robot robot;
