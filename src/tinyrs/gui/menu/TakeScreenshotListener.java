@@ -21,7 +21,6 @@ import tinyrs.gui.PopupBuilder;
 
 public final class TakeScreenshotListener implements ActionListener {
 
-    private static final long START_DELAY_MILLIS = 250;
     private static final DateFormat DATE_FORMAT = new SimpleDateFormat("YYYYMMddHHmmss");
     private final Component target;
     private final Icon popupIcon;
@@ -35,21 +34,20 @@ public final class TakeScreenshotListener implements ActionListener {
 
     @Override
     public void actionPerformed(final ActionEvent e) {
+        final Rectangle visibleArea = target.getGraphicsConfiguration().getBounds().intersection(new Rectangle(
+                target.getLocationOnScreen(),
+                target.getSize()));
+        final BufferedImage screenshot = robot.createScreenCapture(visibleArea);
         new SwingWorker<Void, Void>() {
 
             @Override
             protected Void doInBackground() throws Exception {
-                Thread.sleep(START_DELAY_MILLIS);
-                final String screenshotFormat = GlobalProperty.SCREENSHOT_FORMAT.get();
                 final File screenshotDirectory = new File(Application.storageDirectory(), "Screenshots");
                 if (!screenshotDirectory.exists() && !screenshotDirectory.mkdirs()) {
                     throw new Exception("Failed to create the screenshot directory.");
                 }
+                final String screenshotFormat = GlobalProperty.SCREENSHOT_FORMAT.get();
                 final File screenshotFile = new File(screenshotDirectory, "Screenshot-" + DATE_FORMAT.format(new Date()) + '.' + screenshotFormat);
-                final Rectangle visibleArea = target.getGraphicsConfiguration().getBounds().intersection(new Rectangle(
-                        target.getLocationOnScreen(),
-                        target.getSize()));
-                final BufferedImage screenshot = robot.createScreenCapture(visibleArea);
                 if (!ImageIO.write(screenshot, screenshotFormat, screenshotFile)) {
                     GlobalProperty.SCREENSHOT_FORMAT.setDefault();
                     throw new Exception("Unsupported screenshot format.");
