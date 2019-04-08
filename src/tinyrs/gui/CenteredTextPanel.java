@@ -8,6 +8,7 @@ import java.awt.GridBagLayout;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import javax.swing.JPanel;
+import javax.swing.SwingUtilities;
 
 final class CenteredTextPanel extends JPanel {
 
@@ -46,7 +47,7 @@ final class CenteredTextPanel extends JPanel {
     }
 
     void showTextAbove(final String text, final Component anchor, final int spaceAbove) {
-        if (anchor.getParent() != this) {
+        if (!SwingUtilities.isDescendingFrom(anchor, this)) {
             throw new IllegalArgumentException("The anchor must be within this panel.");
         }
         this.text = text;
@@ -56,7 +57,7 @@ final class CenteredTextPanel extends JPanel {
     }
 
     private void calculateCenter() {
-        if (anchor == null || anchor.getParent() != this) {
+        if (anchor == null || !SwingUtilities.isDescendingFrom(anchor, this)) {
             textCenterX = getX() + getWidth() / 2;
             textCenterY = getY() + getHeight() / 2;
         } else {
