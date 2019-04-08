@@ -45,11 +45,15 @@ public class GamepackDownloadWorker extends SwingWorker<Void, Integer> {
                 }
             });
         }
-        final OutputStream fileStream = new FileOutputStream(destinationFile);
         try {
-            fileStream.write(gamepackBytes);
+            gamepackStream.close();
         } finally {
-            fileStream.close();
+            final OutputStream fileStream = new FileOutputStream(destinationFile);
+            try {
+                fileStream.write(gamepackBytes);
+            } finally {
+                fileStream.close();
+            }
         }
         return null;
     }
