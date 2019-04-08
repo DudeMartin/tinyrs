@@ -4,19 +4,19 @@ import java.applet.Applet;
 import java.io.IOException;
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.util.Map;
+import java.util.Collections;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.jar.JarFile;
 import java.util.jar.Manifest;
 import javax.swing.JMenu;
-import javax.swing.JMenuItem;
 import javax.swing.SwingUtilities;
 
 public final class PluginManager {
 
     private static final String JAR_URL_FORMAT = "jar:file:%s!/";
-    private final Map<Plugin, JMenuItem> pluginMap = new ConcurrentHashMap<Plugin, JMenuItem>();
     private final JMenu pluginMenu = new JMenu("Plugins");
+    private final Set<Plugin> plugins = Collections.newSetFromMap(new ConcurrentHashMap<Plugin, Boolean>());
 
     public PluginManager() {
         pluginMenu.setVisible(false);
@@ -48,28 +48,15 @@ public final class PluginManager {
         } catch (final Exception e) {
             throw new PluginException("Failed to create an instance of the plugin.", e);
         }
-        try {
-            SwingUtilities.invokeAndWait(new Runnable() {
-
-                @Override
-                public void run() {
-                    final JMenuItem pluginMenuItem = plugin.createMenuItem();
-                    if (pluginMenuItem == null) {
-                        throw new NullPointerException();
-                    }
-                    pluginMap.put(plugin, pluginMenuItem);
-                }
-            });
-        } catch (final Exception e) {
-            throw new PluginException("Failed to create and add the plugin menu item.", e);
-        }
+        plugins.add(plugin);
     }
 
     public void startPlugins(final Applet gameApplet) {
-        for (final Plugin plugin : pluginMap.keySet()) {
+        for (final Plugin plugin : plugins) {
             try {
-                plugin.start(gameApplet);
-            } catch (final Exception e) {
+                plugin.initialize(gameApplet);
+                plugin.start();
+            } catch (final PluginException e) {
                 e.printStackTrace();
                 continue;
             }
@@ -78,11 +65,9 @@ public final class PluginManager {
     }
 
     public void stopPlugins() {
-        for (final Plugin plugin : pluginMap.keySet()) {
+        for (final Plugin plugin : plugins) {
             try {
                 plugin.stop();
-            } catch (final Exception e) {
-                e.printStackTrace();
             } finally {
                 removePlugin(plugin);
             }
@@ -98,7 +83,7 @@ public final class PluginManager {
 
             @Override
             public void run() {
-                pluginMenu.add(pluginMap.get(plugin));
+                pluginMenu.add(plugin.getMenuItem());
                 pluginMenu.setVisible(true);
                 pluginMenu.validate();
                 pluginMenu.repaint();
@@ -111,7 +96,7 @@ public final class PluginManager {
 
             @Override
             public void run() {
-                pluginMenu.remove(pluginMap.remove(plugin));
+                pluginMenu.remove(plugin.getMenuItem());
                 if (pluginMenu.getMenuComponentCount() == 0) {
                     pluginMenu.setVisible(false);
                 }
