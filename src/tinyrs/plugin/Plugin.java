@@ -53,7 +53,7 @@ public abstract class Plugin {
                 running = true;
                 try {
                     while (!shouldStop) {
-                        while (pauseSignal.compareAndSet(true, false)) {
+                        if (pauseSignal.compareAndSet(true, false)) {
                             paused = true;
                             synchronized (pauseLock) {
                                 try {
@@ -65,7 +65,10 @@ public abstract class Plugin {
                                 }
                             }
                         }
-                        execute();
+                        final long sleepMillis = execute();
+                        if (sleepMillis > 0) {
+                            sleepUninterruptibly(sleepMillis);
+                        }
                     }
                 } finally {
                     running = false;
@@ -116,7 +119,19 @@ public abstract class Plugin {
         return getClass().getSimpleName();
     }
 
-    protected abstract void execute();
+    protected abstract long execute();
 
     protected abstract JMenuItem createMenuItem();
+
+    private static void sleepUninterruptibly(final long millis) {
+        final long startTime = System.currentTimeMillis();
+        try {
+            Thread.sleep(millis);
+        } catch (final InterruptedException swallowed) {
+            final long remainingMillis = millis - (System.currentTimeMillis() - startTime);
+            if (remainingMillis > 0) {
+                sleepUninterruptibly(remainingMillis);
+            }
+        }
+    }
 }
