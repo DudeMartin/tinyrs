@@ -60,64 +60,37 @@ public final class PluginManager {
 
     public void startPlugins(final Applet gameApplet) {
         for (final Plugin plugin : plugins) {
-            try {
-                plugin.initialize(gameApplet);
-                plugin.start();
-            } catch (final PluginException e) {
-                e.printStackTrace();
+            if (plugin.isInitialized() || plugin.isStarted()) {
                 continue;
             }
-            addPluginToMenu(plugin);
-        }
-    }
+            new Thread(Plugin.pluginThreads, new Runnable() {
 
-    public void stopPlugins() {
-        for (final Plugin plugin : plugins) {
-            try {
-                plugin.stop();
-            } finally {
-                removePlugin(plugin);
-            }
+                @Override
+                public void run() {
+                    try {
+                        plugin.initialize(gameApplet);
+                        plugin.start();
+                    } catch (final PluginException e) {
+                        e.printStackTrace();
+                        plugins.remove(plugin);
+                        return;
+                    }
+                    SwingUtilities.invokeLater(new Runnable() {
+
+                        @Override
+                        public void run() {
+                            pluginMenu.add(plugin.getMenuItem());
+                            pluginMenu.setVisible(true);
+                            pluginMenu.validate();
+                            pluginMenu.repaint();
+                        }
+                    });
+                }
+            }, "Plugin Starter [" + plugin.name() + ']').start();
         }
     }
 
     public JMenu getPluginMenu() {
         return pluginMenu;
-    }
-
-    private void addPluginToMenu(final Plugin plugin) {
-        executeOnEventDispatchThread(new Runnable() {
-
-            @Override
-            public void run() {
-                pluginMenu.add(plugin.getMenuItem());
-                pluginMenu.setVisible(true);
-                pluginMenu.validate();
-                pluginMenu.repaint();
-            }
-        });
-    }
-
-    private void removePlugin(final Plugin plugin) {
-        executeOnEventDispatchThread(new Runnable() {
-
-            @Override
-            public void run() {
-                pluginMenu.remove(plugin.getMenuItem());
-                if (pluginMenu.getMenuComponentCount() == 0) {
-                    pluginMenu.setVisible(false);
-                }
-                pluginMenu.validate();
-                pluginMenu.repaint();
-            }
-        });
-    }
-
-    private static void executeOnEventDispatchThread(final Runnable task) {
-        if (SwingUtilities.isEventDispatchThread()) {
-            task.run();
-        } else {
-            SwingUtilities.invokeLater(task);
-        }
     }
 }

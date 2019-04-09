@@ -7,7 +7,7 @@ import javax.swing.SwingUtilities;
 
 public abstract class Plugin {
 
-    private static final ThreadGroup pluginThreads = new ThreadGroup("Plugin Threads");
+    static final ThreadGroup pluginThreads = new ThreadGroup("Plugin Threads");
     private final AtomicBoolean pauseSignal = new AtomicBoolean();
     private final Object pauseLock = new Object();
     private JMenuItem menuItem;

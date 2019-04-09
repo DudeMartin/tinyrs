@@ -18,7 +18,6 @@ import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.jar.JarFile;
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
@@ -50,7 +49,7 @@ public final class GameWindow extends JFrame {
     private static final Icon CONFIRM_ICON = loadIcon("confirm.png");
     private static final ThreadGroup gameThreads = new ThreadGroup("Game Threads");
     private final CenteredTextPanel centerPanel = new CenteredTextPanel();
-    private final AtomicBoolean started = new AtomicBoolean();
+    private boolean started;
 
     public GameWindow(final PluginManager pluginManager) {
         final JMenuBar menuBar = new JMenuBar();
@@ -171,7 +170,8 @@ public final class GameWindow extends JFrame {
 
             @Override
             public void windowActivated(final WindowEvent e) {
-                if (started.compareAndSet(false, true)) {
+                if (!started) {
+                    started = true;
                     loadGame(pluginManager);
                 }
             }
@@ -190,11 +190,7 @@ public final class GameWindow extends JFrame {
                         return;
                     }
                 }
-                try {
-                    pluginManager.stopPlugins();
-                } finally {
-                    System.exit(0);
-                }
+                System.exit(0);
             }
         });
     }
