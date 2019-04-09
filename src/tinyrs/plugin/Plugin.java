@@ -27,6 +27,9 @@ public abstract class Plugin {
                 @Override
                 public void run() {
                     menuItem = createMenuItem();
+                    if (menuItem == null) {
+                        throw new NullPointerException("The plugin must provide a menu item.");
+                    }
                 }
             });
         } catch (final Exception e) {
@@ -72,6 +75,13 @@ public abstract class Plugin {
                     }
                 } finally {
                     running = false;
+                    SwingUtilities.invokeLater(new Runnable() {
+
+                        @Override
+                        public void run() {
+                            getMenuItem().setEnabled(false);
+                        }
+                    });
                 }
             }
         };
