@@ -8,6 +8,8 @@ import java.util.Collections;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
+import tinyrs.GlobalProperty;
+
 public final class VersionUtility {
 
     private static final byte[] REVISION_NUMBER_PATTERN = { 17, 2, -3, 17, 1, -9, 17 };
@@ -35,7 +37,7 @@ public final class VersionUtility {
     public static boolean isLatestRevision(final int revision) throws IOException {
         final Socket socket = new Socket();
         try {
-            socket.connect(new InetSocketAddress(AppletUtility.getHostForWorld(2), 43594));
+            socket.connect(new InetSocketAddress(AppletUtility.getHostForWorld(GlobalProperty.DEFAULT_WORLD.getDefault(int.class)), 43594));
             final DataOutputStream socketStream = new DataOutputStream(socket.getOutputStream());
             socketStream.write(15);
             socketStream.writeInt(revision);

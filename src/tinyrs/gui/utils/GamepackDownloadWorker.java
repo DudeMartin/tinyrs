@@ -32,28 +32,28 @@ public class GamepackDownloadWorker extends SwingWorker<Void, Integer> {
         final int gamepackSize = gamepackConnection.getContentLength();
         publish(gamepackSize == -1 ? Integer.MIN_VALUE : 0);
         final InputStream gamepackStream = gamepackConnection.getInputStream();
-        final byte[] gamepackBytes;
-        if (gamepackSize == -1) {
-            gamepackBytes = StreamUtility.readBytes(gamepackStream);
-        } else {
-            final AtomicInteger totalBytesRead = new AtomicInteger();
-            gamepackBytes = StreamUtility.readBytes(gamepackStream, new StreamUtility.ProgressListener() {
-
-                @Override
-                public void onBytesRead(final int amount) {
-                    publish(100 * totalBytesRead.addAndGet(amount) / gamepackSize);
-                }
-            });
-        }
         try {
-            gamepackStream.close();
-        } finally {
+            final byte[] gamepackBytes;
+            if (gamepackSize == -1) {
+                gamepackBytes = StreamUtility.readBytes(gamepackStream);
+            } else {
+                final AtomicInteger totalBytesRead = new AtomicInteger();
+                gamepackBytes = StreamUtility.readBytes(gamepackStream, new StreamUtility.ProgressListener() {
+
+                    @Override
+                    public void onBytesRead(final int amount) {
+                        publish(100 * totalBytesRead.addAndGet(amount) / gamepackSize);
+                    }
+                });
+            }
             final OutputStream fileStream = new FileOutputStream(destinationFile);
             try {
                 fileStream.write(gamepackBytes);
             } finally {
                 fileStream.close();
             }
+        } finally {
+            gamepackStream.close();
         }
         return null;
     }
