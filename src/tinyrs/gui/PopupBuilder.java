@@ -68,7 +68,15 @@ public final class PopupBuilder {
 
             @Override
             public Integer call() {
-                return JOptionPane.showOptionDialog(parent, message, title, JOptionPane.YES_NO_OPTION, messageType, icon, null, null);
+                return JOptionPane.showOptionDialog(
+                        parent,
+                        message,
+                        title,
+                        JOptionPane.YES_NO_OPTION,
+                        messageType,
+                        icon,
+                        null,
+                        null);
             }
         });
     }

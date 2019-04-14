@@ -236,13 +236,16 @@ public final class GameWindow extends JFrame {
                 downloadThenStartGame(pluginManager, gamepackFile);
             }
         } else {
+            final URL gamepackAddress;
             try {
-                startGame(
-                        pluginManager,
-                        new URL("http", AppletUtility.getHostForWorld(GlobalProperty.DEFAULT_WORLD.get(int.class)), "/gamepack.jar"));
+                gamepackAddress = new URL(
+                        "http",
+                        AppletUtility.getHostForWorld(GlobalProperty.DEFAULT_WORLD.getDefault(int.class)),
+                        "/gamepack.jar");
             } catch (final MalformedURLException impossible) {
                 throw new Error(impossible);
             }
+            startGame(pluginManager, gamepackAddress);
         }
     }
 
@@ -277,9 +280,13 @@ public final class GameWindow extends JFrame {
 
             @Override
             protected Applet doInBackground() throws Exception {
-                final ClassLoader classLoader = new URLClassLoader(new URL[] { gamepackAddress });
-                final Applet gameApplet = (Applet) classLoader.loadClass("client").newInstance();
-                final URL codeBase = new URL("http", AppletUtility.getHostForWorld(GlobalProperty.DEFAULT_WORLD.get(int.class)), "/");
+                final Applet gameApplet = (Applet) URLClassLoader.newInstance(new URL[] { gamepackAddress })
+                        .loadClass("client")
+                        .newInstance();
+                final URL codeBase = new URL(
+                        "http",
+                        AppletUtility.getHostForWorld(GlobalProperty.DEFAULT_WORLD.get(int.class)),
+                        "/");
                 final String pageSource = new String(StreamUtility.readBytes(codeBase.openStream()), "ISO-8859-1");
                 gameApplet.setStub(AppletUtility.createActiveStub(codeBase, AppletUtility.parseParameters(pageSource)));
                 return gameApplet;

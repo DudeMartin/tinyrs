@@ -20,7 +20,8 @@ public enum GlobalProperty {
     LAST_WINDOW_WIDTH(765),
     LAST_WINDOW_HEIGHT(503);
 
-    private static final Set<GlobalProperty> PROPERTIES = Collections.unmodifiableSet(EnumSet.allOf(GlobalProperty.class));
+    private static final Set<GlobalProperty> PROPERTIES = Collections.unmodifiableSet(
+            EnumSet.allOf(GlobalProperty.class));
     private final Object defaultValue;
     private volatile Object value;
 
@@ -97,7 +98,7 @@ public enum GlobalProperty {
             for (final GlobalProperty property : PROPERTIES) {
                 printWriter.println(property.toString() + '=' + property.get());
             }
-            printWriter.println();
+            printWriter.flush();
         } finally {
             printWriter.close();
         }
@@ -109,7 +110,7 @@ public enum GlobalProperty {
                 return property;
             }
         }
-        throw new IllegalArgumentException(String.format("There is no global property with the name \"%s\".", name));
+        throw new IllegalArgumentException("There is no global property with the name \"" + name + "\".");
     }
 
     private static Object convertFromString(final String value) {

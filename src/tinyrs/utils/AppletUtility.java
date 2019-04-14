@@ -15,7 +15,6 @@ public final class AppletUtility {
     private static final Pattern PARAMETER_PATTERN = Pattern.compile("<param name=\"(.*?)\" value=\"(.*?)\">");
 
     private AppletUtility() {
-
     }
 
     public static String getHostForWorld(final int world) {
@@ -70,7 +69,6 @@ public final class AppletUtility {
 
             @Override
             public void appletResize(final int width, final int height) {
-
             }
         };
     }

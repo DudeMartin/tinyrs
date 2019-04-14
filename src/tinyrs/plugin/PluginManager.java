@@ -38,7 +38,7 @@ public final class PluginManager {
         if (pluginClassName == null) {
             throw new PluginArchiveException("The manifest file is missing the Plugin-Class attribute.");
         }
-        final ClassLoader classLoader = new URLClassLoader(
+        final ClassLoader classLoader = URLClassLoader.newInstance(
                 new URL[] { new URL(String.format(JAR_URL_FORMAT, pluginArchive.getName())) });
         final Plugin plugin;
         try {
@@ -60,7 +60,7 @@ public final class PluginManager {
 
     public void startPlugins(final Applet gameApplet) {
         for (final Plugin plugin : plugins) {
-            if (plugin.isInitialized() || plugin.isStarted()) {
+            if (plugin.isStarted()) {
                 continue;
             }
             new Thread(Plugin.pluginThreads, new Runnable() {
@@ -68,7 +68,9 @@ public final class PluginManager {
                 @Override
                 public void run() {
                     try {
-                        plugin.initialize(gameApplet);
+                        if (!plugin.isInitialized()) {
+                            plugin.initialize(gameApplet);
+                        }
                         plugin.start();
                     } catch (final PluginException e) {
                         e.printStackTrace();
@@ -80,9 +82,9 @@ public final class PluginManager {
                         @Override
                         public void run() {
                             pluginMenu.add(plugin.getMenuItem());
-                            pluginMenu.setVisible(true);
                             pluginMenu.validate();
                             pluginMenu.repaint();
+                            pluginMenu.setVisible(true);
                         }
                     });
                 }

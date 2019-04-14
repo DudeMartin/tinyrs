@@ -57,7 +57,7 @@ final class CenteredTextPanel extends JPanel {
     }
 
     private void calculateCenter() {
-        if (anchor == null || !SwingUtilities.isDescendingFrom(anchor, this)) {
+        if (anchor == null) {
             textCenterX = getX() + getWidth() / 2;
             textCenterY = getY() + getHeight() / 2;
         } else {

@@ -46,8 +46,10 @@ public final class TakeScreenshotListener implements ActionListener {
                 if (!screenshotDirectory.exists() && !screenshotDirectory.mkdirs()) {
                     throw new Exception("Failed to create the screenshot directory.");
                 }
-                final String screenshotFormat = GlobalProperty.SCREENSHOT_FORMAT.get();
-                final File screenshotFile = new File(screenshotDirectory, "Screenshot-" + DATE_FORMAT.format(new Date()) + '.' + screenshotFormat);
+                final String screenshotFormat = GlobalProperty.SCREENSHOT_FORMAT.get().toLowerCase();
+                final File screenshotFile = new File(
+                        screenshotDirectory,
+                        String.format("Screenshot-%s.%s", DATE_FORMAT.format(new Date()), screenshotFormat));
                 if (!ImageIO.write(screenshot, screenshotFormat, screenshotFile)) {
                     GlobalProperty.SCREENSHOT_FORMAT.setDefault();
                     throw new Exception("Unsupported screenshot format.");

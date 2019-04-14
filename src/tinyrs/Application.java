@@ -1,6 +1,5 @@
 package tinyrs;
 
-import java.awt.EventQueue;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -8,6 +7,7 @@ import java.io.IOException;
 import java.util.jar.JarFile;
 import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
+import javax.swing.SwingUtilities;
 
 import tinyrs.gui.GameWindow;
 import tinyrs.gui.PopupBuilder;
@@ -45,7 +45,7 @@ public final class Application {
                 }
                 if (!specifiedDirectory.canRead() || !specifiedDirectory.canWrite()) {
                     new PopupBuilder()
-                            .withMessage("You do not have permission to read or write in the specified storage directory.")
+                            .withMessage("The specified storage directory is not readable or writable.")
                             .withTitle("Storage Error")
                             .withMessageType(JOptionPane.WARNING_MESSAGE)
                             .showMessage();
@@ -64,7 +64,7 @@ public final class Application {
                 try {
                     pluginManager.loadPlugin(new JarFile(pluginPath));
                 } catch (final Exception e) {
-                    System.err.println("Failed to load the plugin at: " + pluginPath + ". Ignoring...");
+                    System.err.println("Failed to load the plugin at " + pluginPath + ". Ignoring...");
                     e.printStackTrace();
                 }
             }
@@ -89,7 +89,7 @@ public final class Application {
                 }
             } else {
                 new PopupBuilder()
-                        .withMessage("Could not create a readable and writable storage directory in the user's home folder.")
+                        .withMessage("Could not create a readable and writable storage directory in the home folder.")
                         .withTitle("Storage Error")
                         .withMessageType(JOptionPane.WARNING_MESSAGE)
                         .showMessage();
@@ -112,7 +112,7 @@ public final class Application {
                 }
             }
         }));
-        EventQueue.invokeLater(new Runnable() {
+        SwingUtilities.invokeLater(new Runnable() {
 
             @Override
             public void run() {
@@ -139,9 +139,6 @@ public final class Application {
         } catch (final NumberFormatException expected) {
             return INVALID_WORLD;
         }
-        if (!AppletUtility.isValidWorld(worldNumber)) {
-            return INVALID_WORLD;
-        }
-        return worldNumber;
+        return AppletUtility.isValidWorld(worldNumber) ? worldNumber : INVALID_WORLD;
     }
 }

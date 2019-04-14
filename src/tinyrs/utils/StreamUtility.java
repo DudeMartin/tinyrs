@@ -7,7 +7,6 @@ import java.io.InputStream;
 public final class StreamUtility {
 
     private StreamUtility() {
-
     }
 
     public static byte[] readBytes(final InputStream stream, final ProgressListener progressListener)

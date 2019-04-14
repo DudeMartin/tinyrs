@@ -26,8 +26,11 @@ public class GamepackDownloadWorker extends SwingWorker<Void, Integer> {
     }
 
     @Override
-    protected Void doInBackground() throws Exception {
-        final URL gamepackAddress = new URL("http", AppletUtility.getHostForWorld(GlobalProperty.DEFAULT_WORLD.getDefault(int.class)), "/gamepack.jar");
+    protected final Void doInBackground() throws Exception {
+        final URL gamepackAddress = new URL(
+                "http",
+                AppletUtility.getHostForWorld(GlobalProperty.DEFAULT_WORLD.getDefault(int.class)),
+                "/gamepack.jar");
         final URLConnection gamepackConnection = gamepackAddress.openConnection();
         final int gamepackSize = gamepackConnection.getContentLength();
         publish(gamepackSize == -1 ? Integer.MIN_VALUE : 0);
@@ -49,6 +52,7 @@ public class GamepackDownloadWorker extends SwingWorker<Void, Integer> {
             final OutputStream fileStream = new FileOutputStream(destinationFile);
             try {
                 fileStream.write(gamepackBytes);
+                fileStream.flush();
             } finally {
                 fileStream.close();
             }
@@ -59,7 +63,7 @@ public class GamepackDownloadWorker extends SwingWorker<Void, Integer> {
     }
 
     @Override
-    protected void process(final List<Integer> chunks) {
+    protected final void process(final List<Integer> chunks) {
         for (final Integer percentage : chunks) {
             if (percentage == Integer.MIN_VALUE) {
                 progressBar.setIndeterminate(true);
