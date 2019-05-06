@@ -8,6 +8,7 @@ import javax.swing.SwingUtilities;
 public abstract class Plugin {
 
     static final ThreadGroup pluginThreads = new ThreadGroup("Plugin Threads");
+    private final Object initializeLock = new Object();
     private final AtomicBoolean pauseSignal = new AtomicBoolean();
     private final Object pauseLock = new Object();
     private JMenuItem menuItem;
@@ -17,78 +18,82 @@ public abstract class Plugin {
     private volatile boolean shouldStop;
     private boolean paused;
 
-    public final synchronized void initialize(final Applet applet) throws PluginException {
-        if (isInitialized()) {
-            throw new IllegalStateException("The plugin is already initialized.");
-        }
-        try {
-            SwingUtilities.invokeAndWait(new Runnable() {
+    public final void initialize(final Applet applet) throws PluginException {
+        synchronized (initializeLock) {
+            if (isInitialized()) {
+                throw new IllegalStateException("The plugin is already initialized.");
+            }
+            try {
+                SwingUtilities.invokeAndWait(new Runnable() {
 
-                @Override
-                public void run() {
-                    menuItem = createMenuItem();
-                    if (menuItem == null) {
-                        throw new NullPointerException("The plugin must provide a menu item.");
+                    @Override
+                    public void run() {
+                        menuItem = createMenuItem();
+                        if (menuItem == null) {
+                            throw new NullPointerException("The plugin must provide a menu item.");
+                        }
                     }
-                }
-            });
-        } catch (final Exception e) {
-            throw new PluginException("Failed to initialize the plugin menu item.", e);
+                });
+            } catch (final Exception e) {
+                throw new PluginException("Failed to initialize the plugin menu item.", e);
+            }
+            initializePlugin(applet);
+            initialized = true;
         }
-        initializePlugin(applet);
-        initialized = true;
     }
 
     protected void initializePlugin(final Applet applet) throws PluginException {
 
     }
 
-    public final synchronized void start() {
-        if (!isInitialized()) {
-            throw new IllegalStateException("The plugin must be initialized first.");
-        } else if (isStarted()) {
-            throw new IllegalStateException("The plugin has been started already.");
-        }
-        final Runnable executeTask = new Runnable() {
+    public final void start() {
+        synchronized (initializeLock) {
+            if (!isInitialized()) {
+                throw new IllegalStateException("The plugin must be initialized first.");
+            } else if (isStarted()) {
+                throw new IllegalStateException("The plugin has been started already.");
+            }
+            final Runnable executeTask = new Runnable() {
 
-            @Override
-            public void run() {
-                running = true;
-                try {
-                    while (!shouldStop) {
-                        if (pauseSignal.compareAndSet(true, false)) {
-                            paused = true;
-                            synchronized (pauseLock) {
-                                try {
-                                    pauseLock.wait();
-                                } catch (final InterruptedException e) {
-                                    e.printStackTrace();
-                                } finally {
-                                    paused = false;
+                @Override
+                public void run() {
+                    running = true;
+                    try {
+                        while (!shouldStop) {
+                            if (pauseSignal.compareAndSet(true, false)) {
+                                paused = true;
+                                synchronized (pauseLock) {
+                                    try {
+                                        pauseLock.wait();
+                                    } catch (final InterruptedException e) {
+                                        e.printStackTrace();
+                                    } finally {
+                                        paused = false;
+                                    }
                                 }
                             }
+                            final long sleepMillis = execute();
+                            if (sleepMillis > 0) {
+                                sleepUninterruptibly(sleepMillis);
+                            }
                         }
-                        final long sleepMillis = execute();
-                        if (sleepMillis > 0) {
-                            sleepUninterruptibly(sleepMillis);
-                        }
-                    }
-                } finally {
-                    running = false;
-                    SwingUtilities.invokeLater(new Runnable() {
+                    } finally {
+                        running = false;
+                        SwingUtilities.invokeLater(new Runnable() {
 
-                        @Override
-                        public void run() {
-                            getMenuItem().setEnabled(false);
-                        }
-                    });
+                            @Override
+                            public void run() {
+                                getMenuItem().setEnabled(false);
+                            }
+                        });
+                    }
                 }
-            }
-        };
-        final Thread thread = new Thread(pluginThreads, executeTask, name());
-        thread.setDaemon(true);
-        thread.start();
-        started = true;
+            };
+            final Thread thread = new Thread(pluginThreads, executeTask, name());
+            thread.setDaemon(true);
+            thread.start();
+            started = true;
+        }
     }
 
     public final void stop() {
@@ -138,7 +143,7 @@ public abstract class Plugin {
         try {
             Thread.sleep(millis);
         } catch (final InterruptedException swallowed) {
-            final long remainingMillis = millis - (System.currentTimeMillis() - startTime);
+            final long remainingMillis = millis - Math.max(1, System.currentTimeMillis() - startTime);
             if (remainingMillis > 0) {
                 sleepUninterruptibly(remainingMillis);
             }
