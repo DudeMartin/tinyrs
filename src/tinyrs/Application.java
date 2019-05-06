@@ -4,19 +4,20 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.jar.JarFile;
 import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
 import javax.swing.SwingUtilities;
 
 import tinyrs.gui.GameWindow;
 import tinyrs.gui.PopupBuilder;
+import tinyrs.plugin.BulkPluginLoader;
 import tinyrs.plugin.PluginManager;
 import tinyrs.utils.AppletUtility;
 
 public final class Application {
 
     private static final int INVALID_WORLD = -1;
+    private static final String JAR_URL_FORMAT = "jar:file:%s!/";
     private static File storageDirectory;
 
     public static void main(final String[] arguments) {
@@ -60,13 +61,7 @@ public final class Application {
                     GlobalProperty.DEFAULT_WORLD.set(defaultWorld);
                 }
             } else if (argument.startsWith("pluginArchive=")) {
-                final String pluginPath = argument.substring(14);
-                try {
-                    pluginManager.loadPlugin(new JarFile(pluginPath));
-                } catch (final Exception e) {
-                    System.err.println("Failed to load the plugin at " + pluginPath + ". Ignoring...");
-                    e.printStackTrace();
-                }
+                BulkPluginLoader.loadPlugins(pluginManager, String.format(JAR_URL_FORMAT, argument.substring(14)));
             }
         }
         boolean loadedProperties = false;
@@ -94,6 +89,12 @@ public final class Application {
                         .withMessageType(JOptionPane.WARNING_MESSAGE)
                         .showMessage();
             }
+        }
+        try {
+            BulkPluginLoader.loadFromRepository(pluginManager);
+        } catch (final IOException e) {
+            System.err.println("Failed to load plugins from the repository.");
+            e.printStackTrace();
         }
         if (loadedProperties && !AppletUtility.isValidWorld(GlobalProperty.DEFAULT_WORLD.get(int.class))) {
             GlobalProperty.DEFAULT_WORLD.setDefault();

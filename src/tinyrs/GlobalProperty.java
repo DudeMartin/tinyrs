@@ -18,7 +18,8 @@ public enum GlobalProperty {
     LAST_WINDOW_X(0),
     LAST_WINDOW_Y(0),
     LAST_WINDOW_WIDTH(765),
-    LAST_WINDOW_HEIGHT(503);
+    LAST_WINDOW_HEIGHT(503),
+    PLUGIN_REPOSITORY("https://s3-us-west-2.amazonaws.com/tinyrs/plugins.txt");
 
     private static final Set<GlobalProperty> PROPERTIES = Collections.unmodifiableSet(
             EnumSet.allOf(GlobalProperty.class));

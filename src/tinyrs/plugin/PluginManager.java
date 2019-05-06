@@ -2,19 +2,18 @@ package tinyrs.plugin;
 
 import java.applet.Applet;
 import java.io.IOException;
+import java.net.JarURLConnection;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.Collections;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.jar.JarFile;
-import java.util.jar.Manifest;
+import java.util.jar.Attributes;
 import javax.swing.JMenu;
 import javax.swing.SwingUtilities;
 
 public final class PluginManager {
 
-    private static final String JAR_URL_FORMAT = "jar:file:%s!/";
     private final Set<Plugin> plugins = Collections.newSetFromMap(new ConcurrentHashMap<Plugin, Boolean>());
     private JMenu pluginMenu;
 
@@ -29,17 +28,16 @@ public final class PluginManager {
         });
     }
 
-    public void loadPlugin(final JarFile pluginArchive) throws IOException, PluginException {
-        final Manifest pluginManifest = pluginArchive.getManifest();
-        if (pluginManifest == null) {
-            throw new PluginArchiveException("The plugin archive is missing the manifest file.");
+    public void loadPlugin(final JarURLConnection pluginConnection) throws IOException, PluginException {
+        final Attributes pluginAttributes = pluginConnection.getMainAttributes();
+        if (pluginAttributes == null) {
+            throw new PluginArchiveException("The plugin archive is missing the manifest file or main attributes.");
         }
-        final String pluginClassName = pluginManifest.getMainAttributes().getValue("Plugin-Class");
+        final String pluginClassName = pluginAttributes.getValue("Plugin-Class");
         if (pluginClassName == null) {
             throw new PluginArchiveException("The manifest file is missing the Plugin-Class attribute.");
         }
-        final ClassLoader classLoader = URLClassLoader.newInstance(
-                new URL[] { new URL(String.format(JAR_URL_FORMAT, pluginArchive.getName())) });
+        final ClassLoader classLoader = URLClassLoader.newInstance(new URL[] { pluginConnection.getJarFileURL() });
         final Plugin plugin;
         try {
             plugin = classLoader.loadClass(pluginClassName).asSubclass(Plugin.class).newInstance();
