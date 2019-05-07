@@ -42,10 +42,6 @@ public abstract class Plugin {
         }
     }
 
-    protected void initializePlugin(final Applet applet) throws PluginException {
-
-    }
-
     public final void start() {
         synchronized (initializeLock) {
             if (!isInitialized()) {
@@ -53,45 +49,7 @@ public abstract class Plugin {
             } else if (isStarted()) {
                 throw new IllegalStateException("The plugin has been started already.");
             }
-            final Runnable executeTask = new Runnable() {
-
-                @Override
-                public void run() {
-                    running = true;
-                    try {
-                        while (!shouldStop) {
-                            if (pauseSignal.compareAndSet(true, false)) {
-                                paused = true;
-                                synchronized (pauseLock) {
-                                    try {
-                                        pauseLock.wait();
-                                    } catch (final InterruptedException e) {
-                                        e.printStackTrace();
-                                    } finally {
-                                        paused = false;
-                                    }
-                                }
-                            }
-                            final long sleepMillis = execute();
-                            if (sleepMillis > 0) {
-                                sleepUninterruptibly(sleepMillis);
-                            }
-                        }
-                    } finally {
-                        running = false;
-                        SwingUtilities.invokeLater(new Runnable() {
-
-                            @Override
-                            public void run() {
-                                getMenuItem().setEnabled(false);
-                            }
-                        });
-                    }
-                }
-            };
-            final Thread thread = new Thread(pluginThreads, executeTask, name());
-            thread.setDaemon(true);
-            thread.start();
+            new PluginThread().start();
             started = true;
         }
     }
@@ -134,18 +92,63 @@ public abstract class Plugin {
         return getClass().getSimpleName();
     }
 
+    protected void initializePlugin(final Applet applet) throws PluginException {
+    }
+
     protected abstract long execute();
 
     protected abstract JMenuItem createMenuItem();
 
-    private static void sleepUninterruptibly(final long millis) {
-        final long startTime = System.currentTimeMillis();
-        try {
-            Thread.sleep(millis);
-        } catch (final InterruptedException swallowed) {
-            final long remainingMillis = millis - Math.max(1, System.currentTimeMillis() - startTime);
-            if (remainingMillis > 0) {
-                sleepUninterruptibly(remainingMillis);
+    private final class PluginThread extends Thread {
+
+        private PluginThread() {
+            super(pluginThreads, name());
+            setDaemon(true);
+        }
+
+        @Override
+        public void run() {
+            running = true;
+            try {
+                while (!shouldStop) {
+                    if (pauseSignal.compareAndSet(true, false)) {
+                        paused = true;
+                        synchronized (pauseLock) {
+                            try {
+                                pauseLock.wait();
+                            } catch (final InterruptedException e) {
+                                e.printStackTrace();
+                            } finally {
+                                paused = false;
+                            }
+                        }
+                    }
+                    final long sleepMillis = execute();
+                    if (sleepMillis > 0) {
+                        sleepUninterruptibly(sleepMillis);
+                    }
+                }
+            } finally {
+                running = false;
+                SwingUtilities.invokeLater(new Runnable() {
+
+                    @Override
+                    public void run() {
+                        getMenuItem().setEnabled(false);
+                    }
+                });
+            }
+        }
+
+        private void sleepUninterruptibly(final long millis) {
+            final long startTime = System.currentTimeMillis();
+            try {
+                Thread.sleep(millis);
+            } catch (final InterruptedException swallowed) {
+                final long remainingMillis = millis - Math.max(1, System.currentTimeMillis() - startTime);
+                if (remainingMillis > 0) {
+                    sleepUninterruptibly(remainingMillis);
+                }
             }
         }
     }

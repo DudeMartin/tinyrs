@@ -27,10 +27,8 @@ public class GamepackDownloadWorker extends SwingWorker<Void, Integer> {
 
     @Override
     protected final Void doInBackground() throws Exception {
-        final URL gamepackAddress = new URL(
-                "http",
-                AppletUtility.getHostForWorld(GlobalProperty.DEFAULT_WORLD.getDefault(int.class)),
-                "/gamepack.jar");
+        final URL gamepackAddress =
+                AppletUtility.createWorldAddress(GlobalProperty.DEFAULT_WORLD.getDefault(int.class), "/gamepack.jar");
         final URLConnection gamepackConnection = gamepackAddress.openConnection();
         final int gamepackSize = gamepackConnection.getContentLength();
         publish(gamepackSize == -1 ? Integer.MIN_VALUE : 0);

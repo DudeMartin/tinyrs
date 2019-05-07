@@ -58,39 +58,50 @@ public final class PluginManager {
 
     public void startPlugins(final Applet gameApplet) {
         for (final Plugin plugin : plugins) {
-            if (plugin.isStarted()) {
-                continue;
+            if (!plugin.isStarted()) {
+                new PluginStarterThread(plugin, gameApplet).start();
             }
-            new Thread(Plugin.pluginThreads, new Runnable() {
-
-                @Override
-                public void run() {
-                    try {
-                        if (!plugin.isInitialized()) {
-                            plugin.initialize(gameApplet);
-                        }
-                        plugin.start();
-                    } catch (final PluginException e) {
-                        e.printStackTrace();
-                        plugins.remove(plugin);
-                        return;
-                    }
-                    SwingUtilities.invokeLater(new Runnable() {
-
-                        @Override
-                        public void run() {
-                            pluginMenu.add(plugin.getMenuItem());
-                            pluginMenu.validate();
-                            pluginMenu.repaint();
-                            pluginMenu.setVisible(true);
-                        }
-                    });
-                }
-            }, "Plugin Starter [" + plugin.name() + ']').start();
         }
     }
 
     public JMenu getPluginMenu() {
         return pluginMenu;
+    }
+
+    private final class PluginStarterThread extends Thread {
+
+        private final Plugin plugin;
+        private final Applet gameApplet;
+
+        private PluginStarterThread(final Plugin plugin, final Applet gameApplet) {
+            super(Plugin.pluginThreads, "Plugin Starter [" + plugin.name() + ']');
+            this.plugin = plugin;
+            this.gameApplet = gameApplet;
+            setDaemon(true);
+        }
+
+        @Override
+        public void run() {
+            try {
+                if (!plugin.isInitialized()) {
+                    plugin.initialize(gameApplet);
+                }
+                plugin.start();
+            } catch (final PluginException e) {
+                e.printStackTrace();
+                plugins.remove(plugin);
+                return;
+            }
+            SwingUtilities.invokeLater(new Runnable() {
+
+                @Override
+                public void run() {
+                    pluginMenu.add(plugin.getMenuItem());
+                    pluginMenu.validate();
+                    pluginMenu.repaint();
+                    pluginMenu.setVisible(true);
+                }
+            });
+        }
     }
 }

@@ -46,7 +46,10 @@ public final class GameWindow extends JFrame {
     private static final Icon FOLDER_ICON = loadIcon("folder.png");
     private static final Icon CAMERA_ICON = loadIcon("camera.png");
     private static final Icon WORLD_ICON = loadIcon("world.png");
+    private static final Icon BOUNDS_ICON = loadIcon("bounds.png");
     private static final Icon CONFIRM_ICON = loadIcon("confirm.png");
+    private static final Icon RESIZE_ICON = loadIcon("resize.png");
+    private static final Icon ALWAYS_ON_TOP_ICON = loadIcon("top.png");
     private static final ThreadGroup gameThreads = new ThreadGroup("Game Threads");
     private final CenteredTextPanel centerPanel = new CenteredTextPanel();
     private boolean started;
@@ -84,7 +87,7 @@ public final class GameWindow extends JFrame {
             fileMenu.add(defaultWorldItem);
             final JCheckBoxMenuItem rememberBoundsItem = new JCheckBoxMenuItem(
                     "Remember window bounds",
-                    loadIcon("bounds.png"),
+                    BOUNDS_ICON,
                     rememberBounds);
             rememberBoundsItem.setToolTipText("Remember the window position and size after closing it.");
             rememberBoundsItem.addItemListener(new ItemListener() {
@@ -108,7 +111,7 @@ public final class GameWindow extends JFrame {
             }
         });
         fileMenu.add(confirmCloseItem);
-        final JMenuItem defaultSizeItem = new JMenuItem("Set default size", loadIcon("resize.png"));
+        final JMenuItem defaultSizeItem = new JMenuItem("Set default size", RESIZE_ICON);
         defaultSizeItem.addActionListener(new ActionListener() {
 
             @Override
@@ -122,7 +125,7 @@ public final class GameWindow extends JFrame {
         fileMenu.add(defaultSizeItem);
         final JCheckBoxMenuItem alwaysOnTopItem = new JCheckBoxMenuItem(
                 "Always on top",
-                loadIcon("top.png"),
+                ALWAYS_ON_TOP_ICON,
                 GlobalProperty.ALWAYS_ON_TOP.get(boolean.class));
         alwaysOnTopItem.addItemListener(new ItemListener() {
 
@@ -236,15 +239,9 @@ public final class GameWindow extends JFrame {
                 downloadThenStartGame(pluginManager, gamepackFile);
             }
         } else {
-            final URL gamepackAddress;
-            try {
-                gamepackAddress = new URL(
-                        "http",
-                        AppletUtility.getHostForWorld(GlobalProperty.DEFAULT_WORLD.getDefault(int.class)),
-                        "/gamepack.jar");
-            } catch (final MalformedURLException impossible) {
-                throw new Error(impossible);
-            }
+            final URL gamepackAddress = AppletUtility.createWorldAddress(
+                    GlobalProperty.DEFAULT_WORLD.getDefault(int.class),
+                    "/gamepack.jar");
             startGame(pluginManager, gamepackAddress);
         }
     }
@@ -283,10 +280,7 @@ public final class GameWindow extends JFrame {
                 final Applet gameApplet = (Applet) URLClassLoader.newInstance(new URL[] { gamepackAddress })
                         .loadClass("client")
                         .newInstance();
-                final URL codeBase = new URL(
-                        "http",
-                        AppletUtility.getHostForWorld(GlobalProperty.DEFAULT_WORLD.get(int.class)),
-                        "/");
+                final URL codeBase = AppletUtility.createWorldAddress(GlobalProperty.DEFAULT_WORLD.get(int.class), "/");
                 final String pageSource = new String(StreamUtility.readBytes(codeBase.openStream()), "ISO-8859-1");
                 gameApplet.setStub(AppletUtility.createActiveStub(codeBase, AppletUtility.parseParameters(pageSource)));
                 return gameApplet;
@@ -320,7 +314,7 @@ public final class GameWindow extends JFrame {
         }.execute();
     }
 
-    private static ImageIcon loadIcon(final String name) {
-        return new ImageIcon(GameWindow.class.getResource("/resources/" + name));
+    private static ImageIcon loadIcon(final String iconFileName) {
+        return new ImageIcon(GameWindow.class.getResource("/resources/" + iconFileName));
     }
 }

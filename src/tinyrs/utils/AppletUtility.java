@@ -3,6 +3,7 @@ package tinyrs.utils;
 import java.applet.AppletContext;
 import java.applet.AppletStub;
 import java.net.InetAddress;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.UnknownHostException;
 import java.util.HashMap;
@@ -27,6 +28,14 @@ public final class AppletUtility {
             return true;
         } catch (final UnknownHostException expected) {
             return false;
+        }
+    }
+
+    public static URL createWorldAddress(final int world, final String path) {
+        try {
+            return new URL("http", getHostForWorld(world), path);
+        } catch (final MalformedURLException impossible) {
+            throw new RuntimeException(impossible);
         }
     }
 

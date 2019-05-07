@@ -17,7 +17,7 @@ import tinyrs.utils.AppletUtility;
 public final class Application {
 
     private static final int INVALID_WORLD = -1;
-    private static final String JAR_URL_FORMAT = "jar:file:%s!/";
+    private static final String JAR_FILE_URL_FORMAT = "jar:file:%s!/";
     private static File storageDirectory;
 
     public static void main(final String[] arguments) {
@@ -61,7 +61,7 @@ public final class Application {
                     GlobalProperty.DEFAULT_WORLD.set(defaultWorld);
                 }
             } else if (argument.startsWith("pluginArchive=")) {
-                BulkPluginLoader.loadPlugins(pluginManager, String.format(JAR_URL_FORMAT, argument.substring(14)));
+                BulkPluginLoader.loadPlugins(pluginManager, String.format(JAR_FILE_URL_FORMAT, argument.substring(14)));
             }
         }
         boolean loadedProperties = false;

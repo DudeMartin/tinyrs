@@ -15,6 +15,8 @@ import tinyrs.utils.StreamUtility;
 
 public final class BulkPluginLoader {
 
+    private static final String JAR_URL_FORMAT = "jar:%s!/";
+
     private BulkPluginLoader() {
     }
 
@@ -24,7 +26,13 @@ public final class BulkPluginLoader {
         final Map<String, Exception> failureMap = new HashMap<String, Exception>();
         for (final String pluginAddress : pluginAddresses) {
             try {
-                final JarURLConnection pluginConnection = (JarURLConnection) new URL(pluginAddress).openConnection();
+                final URL pluginUrl;
+                if (!pluginAddress.startsWith("jar:")) {
+                    pluginUrl = new URL(String.format(JAR_URL_FORMAT,  pluginAddress));
+                } else {
+                    pluginUrl = new URL(pluginAddress);
+                }
+                final JarURLConnection pluginConnection = (JarURLConnection) pluginUrl.openConnection();
                 pluginManager.loadPlugin(pluginConnection);
             } catch (final Exception e) {
                 System.err.println("Failed to load the plugin at " + pluginAddress + ". Ignoring...");
